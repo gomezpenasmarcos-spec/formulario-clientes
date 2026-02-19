@@ -6,292 +6,358 @@
 <title>Reserva tu cita</title>
 
 <style>
-body{
-  font-family:Arial, sans-serif;
-  background:#f3f3f3;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  min-height:100vh;
-  margin:0;
-}
+  body{
+    font-family:Arial, sans-serif;
+    background:#f3f3f3;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+    margin:0;
+  }
 
-.container{
-  background:#fff;
-  padding:40px;
-  border-radius:20px;
-  width:420px;
-  box-shadow:0 10px 30px rgba(0,0,0,.10);
-}
+  .container{
+    background:#fff;
+    padding:40px;
+    border-radius:20px;
+    width:420px;
+    box-shadow:0 10px 30px rgba(0,0,0,.10);
+  }
 
-h2{
-  text-align:center;
-  font-size:32px;
-  margin-bottom:30px;
-}
+  h2{
+    text-align:center;
+    font-size:32px;
+    margin-bottom:30px;
+  }
 
-.field{
-  margin-bottom:20px;
-}
+  .field{
+    margin-bottom:18px;
+  }
 
-label{
-  display:block;
-  font-size:16px;
-  margin-bottom:6px;
-}
+  label{
+    display:block;
+    font-size:16px;
+    margin-bottom:6px;
+  }
 
-input, textarea, select{
-  width:100%;
-  padding:14px;
-  border-radius:12px;
-  border:1px solid #ccc;
-  font-size:18px;
-  box-sizing:border-box;
-  outline:none;
-}
+  input, textarea, select{
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    border:1px solid #ccc;
+    font-size:18px;
+    box-sizing:border-box;
+    outline:none;
+    background:#fff;
+  }
 
-textarea{ resize:none; }
+  textarea{ resize:none; }
 
-.phone-wrapper{
-  display:flex;
-  border:1px solid #ccc;
-  border-radius:12px;
-  height:54px;
-  background:#fff;
-  overflow:hidden;
-}
+  /* TELÉFONO */
+  .phone-wrapper{
+    display:flex;
+    border:1px solid #ccc;
+    border-radius:12px;
+    height:54px;
+    background:#fff;
+    overflow:visible; /* importante para que el dropdown no se corte */
+  }
 
-.flag-box{
-  width:70px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  border-right:1px solid #ddd;
-  position:relative;
-}
+  .flag-box{
+    width:74px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    border-right:1px solid #ddd;
+    position:relative;
+    user-select:none;
+  }
 
-.flag-box img{
-  width:28px;
-  height:20px;
-  object-fit:cover;
-}
+  .flag-box img{
+    width:28px;
+    height:20px;
+    object-fit:cover;
+    border-radius:3px;
+  }
 
-.prefix{
-  display:flex;
-  align-items:center;
-  padding:0 8px;
-  font-size:18px;
-  color:#444;
-}
+  .prefix{
+    display:flex;
+    align-items:center;
+    padding:0 10px;
+    font-size:18px;
+    color:#444;
+    white-space:nowrap;
+  }
 
-.phone-input{
-  flex:1;
-  border:none;
-  outline:none;
-  font-size:18px;
-  padding-left:5px;
-}
+  .phone-input{
+    flex:1;
+    border:none;
+    outline:none;
+    font-size:18px;
+    padding:14px 14px 14px 6px;
+    height:52px;
+  }
 
-.flag-dropdown{
-  position:absolute;
-  top:54px;
-  left:0;
-  width:240px;
-  max-height:260px;
-  overflow-y:auto;
-  background:#fff;
-  box-shadow:0 8px 20px rgba(0,0,0,.15);
-  border-radius:10px;
-  display:none;
-  z-index:20;
-}
+  /* Dropdown países */
+  .flag-dropdown{
+    position:absolute;
+    top:58px;
+    left:0;
+    width:260px;
+    max-height:280px;
+    overflow-y:auto;
+    background:#fff;
+    box-shadow:0 8px 24px rgba(0,0,0,.18);
+    border-radius:12px;
+    display:none;
+    z-index:9999;
+    border:1px solid #eee;
+  }
 
-.flag-option{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:10px;
-  cursor:pointer;
-}
+  .flag-option{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    cursor:pointer;
+    font-size:16px;
+  }
 
-.flag-option:hover{
-  background:#f1f1f1;
-}
+  .flag-option img{
+    width:26px;
+    height:18px;
+    border-radius:3px;
+    object-fit:cover;
+  }
 
-button{
-  width:100%;
-  padding:16px;
-  border-radius:14px;
-  border:none;
-  background:#2f5bd7;
-  color:#fff;
-  font-size:22px;
-  cursor:pointer;
-  margin-top:10px;
-}
-button:hover{ background:#264cc0; }
+  .flag-option:hover{
+    background:#f3f5f9;
+  }
+
+  button{
+    width:100%;
+    padding:16px;
+    border-radius:14px;
+    border:none;
+    background:#2f5bd7;
+    color:#fff;
+    font-size:22px;
+    cursor:pointer;
+    margin-top:6px;
+  }
+  button:hover{ background:#264cc0; }
+
+  /* Mensajes (sin alert) */
+  .status{
+    margin-top:14px;
+    font-size:16px;
+    display:none;
+  }
+  .status.ok{ color:#17803d; display:block; }
+  .status.err{ color:#b42318; display:block; }
+
 </style>
 </head>
 
 <body>
 
 <div class="container">
-<h2>Reserva tu cita</h2>
+  <h2>Reserva tu cita</h2>
 
-<form id="form">
+  <form id="form">
 
-<div class="field">
-<label>Nombre</label>
-<input id="nombre" type="text" required>
-</div>
+    <div class="field">
+      <label>Nombre</label>
+      <input id="nombre" type="text" placeholder="Nombre completo" required>
+    </div>
 
-<div class="field">
-<label>Correo electrónico</label>
-<input id="email" type="email" required>
-</div>
+    <div class="field">
+      <label>Correo electrónico</label>
+      <input id="email" type="email" placeholder="Correo electrónico" required>
+    </div>
 
-<div class="field">
-<label>Teléfono</label>
-<div class="phone-wrapper">
+    <div class="field">
+      <label>Teléfono</label>
+      <div class="phone-wrapper">
 
-<div class="flag-box" id="flagBox">
-  <img id="currentFlag" src="https://flagcdn.com/w40/es.png">
-  <div class="flag-dropdown" id="flagDropdown"></div>
-</div>
+        <div class="flag-box" id="flagBox" aria-label="Seleccionar país">
+          <img id="currentFlag" src="https://flagcdn.com/w40/es.png" alt="ES">
+          <div class="flag-dropdown" id="flagDropdown"></div>
+        </div>
 
-<div class="prefix" id="prefix">+34</div>
+        <div class="prefix" id="prefix">+34</div>
 
-<input id="telefono" class="phone-input" type="text" required>
+        <input id="telefono" class="phone-input" type="text" placeholder="654 654 654" required>
+      </div>
+    </div>
 
-</div>
-</div>
+    <div class="field">
+      <label>Selecciona el día</label>
+      <input id="fecha" type="date" required>
+    </div>
 
-<div class="field">
-<label>Selecciona el día</label>
-<input id="fecha" type="date" required>
-</div>
+    <div class="field">
+      <label>Selecciona la hora</label>
+      <select id="hora" required></select>
+    </div>
 
-<div class="field">
-<label>Selecciona la hora</label>
-<select id="hora" required></select>
-</div>
+    <div class="field">
+      <label>Motivo</label>
+      <textarea id="mensaje" rows="3" placeholder="Escribe el motivo de la cita" required></textarea>
+    </div>
 
-<div class="field">
-<label>Motivo</label>
-<textarea id="mensaje" rows="3" required></textarea>
-</div>
+    <button type="submit" id="submitBtn">Reservar</button>
 
-<button type="submit">Reservar</button>
+    <!-- Mensaje profesional debajo (sin alert) -->
+    <div id="status" class="status"></div>
 
-</form>
+  </form>
 </div>
 
 <script>
+  // ====== CONFIG ======
+  const WEBHOOK_PROD = "https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6";
 
-// ===== LISTA AMPLIA DE PAÍSES =====
-const countries = [
-{code:"+34",flag:"es"},
-{code:"+33",flag:"fr"},
-{code:"+49",flag:"de"},
-{code:"+44",flag:"gb"},
-{code:"+1",flag:"us"},
-{code:"+1",flag:"ca"},
-{code:"+39",flag:"it"},
-{code:"+351",flag:"pt"},
-{code:"+52",flag:"mx"},
-{code:"+54",flag:"ar"},
-{code:"+55",flag:"br"},
-{code:"+57",flag:"co"},
-{code:"+56",flag:"cl"},
-{code:"+51",flag:"pe"},
-{code:"+81",flag:"jp"},
-{code:"+86",flag:"cn"},
-{code:"+91",flag:"in"},
-{code:"+61",flag:"au"},
-{code:"+7",flag:"ru"},
-{code:"+41",flag:"ch"},
-{code:"+43",flag:"at"},
-{code:"+46",flag:"se"},
-{code:"+31",flag:"nl"},
-{code:"+32",flag:"be"}
-];
+  // ====== LISTA AMPLIA DE PAÍSES (puedes ampliar más si quieres) ======
+  const countries = [
+    {code:"+34",flag:"es"}, {code:"+33",flag:"fr"}, {code:"+49",flag:"de"}, {code:"+44",flag:"gb"},
+    {code:"+1",flag:"us"},  {code:"+1",flag:"ca"},  {code:"+52",flag:"mx"}, {code:"+54",flag:"ar"},
+    {code:"+55",flag:"br"}, {code:"+57",flag:"co"}, {code:"+56",flag:"cl"}, {code:"+51",flag:"pe"},
+    {code:"+39",flag:"it"}, {code:"+351",flag:"pt"}, {code:"+31",flag:"nl"}, {code:"+32",flag:"be"},
+    {code:"+41",flag:"ch"}, {code:"+43",flag:"at"}, {code:"+46",flag:"se"}, {code:"+45",flag:"dk"},
+    {code:"+47",flag:"no"}, {code:"+48",flag:"pl"}, {code:"+353",flag:"ie"}, {code:"+420",flag:"cz"},
+    {code:"+36",flag:"hu"}, {code:"+30",flag:"gr"}, {code:"+90",flag:"tr"}, {code:"+40",flag:"ro"},
+    {code:"+380",flag:"ua"}, {code:"+7",flag:"ru"}, {code:"+81",flag:"jp"}, {code:"+82",flag:"kr"},
+    {code:"+86",flag:"cn"}, {code:"+91",flag:"in"}, {code:"+61",flag:"au"}, {code:"+64",flag:"nz"},
+    {code:"+27",flag:"za"}, {code:"+20",flag:"eg"}, {code:"+212",flag:"ma"}, {code:"+213",flag:"dz"},
+    {code:"+216",flag:"tn"}, {code:"+971",flag:"ae"}, {code:"+966",flag:"sa"}
+  ];
 
-const dropdown=document.getElementById("flagDropdown");
+  const dropdown = document.getElementById("flagDropdown");
+  const flagBox = document.getElementById("flagBox");
+  const currentFlag = document.getElementById("currentFlag");
+  const prefixEl = document.getElementById("prefix");
+  const telInput = document.getElementById("telefono");
+  const statusEl = document.getElementById("status");
+  const submitBtn = document.getElementById("submitBtn");
+  const form = document.getElementById("form");
 
-countries.forEach(c=>{
-  const div=document.createElement("div");
-  div.className="flag-option";
-  div.innerHTML=`<img src="https://flagcdn.com/w40/${c.flag}.png"> ${c.code}`;
-  div.onclick=()=>{
-    document.getElementById("currentFlag").src=`https://flagcdn.com/w40/${c.flag}.png`;
-    document.getElementById("prefix").textContent=c.code;
-    dropdown.style.display="none";
-  };
-  dropdown.appendChild(div);
-});
+  // Render dropdown
+  function renderCountries(){
+    dropdown.innerHTML = "";
+    countries.forEach(c=>{
+      const div = document.createElement("div");
+      div.className = "flag-option";
+      div.innerHTML = `<img src="https://flagcdn.com/w40/${c.flag}.png" alt="${c.flag.toUpperCase()}"> ${c.code}`;
 
-const flagBox=document.getElementById("flagBox");
+      // CLAVE: usar mousedown para que no se cierre antes de seleccionar
+      div.addEventListener("mousedown",(e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        prefixEl.textContent = c.code;
+        currentFlag.src = `https://flagcdn.com/w40/${c.flag}.png`;
+        dropdown.style.display = "none";
+      });
 
-flagBox.addEventListener("click",(e)=>{
-  e.stopPropagation();
-  dropdown.style.display = dropdown.style.display==="block"?"none":"block";
-});
+      dropdown.appendChild(div);
+    });
+  }
+  renderCountries();
 
-document.addEventListener("click",()=>{
-  dropdown.style.display="none";
-});
-
-// ===== FORMATO TELÉFONO =====
-const telInput=document.getElementById("telefono");
-telInput.addEventListener("input",(e)=>{
-  const digits=e.target.value.replace(/\D/g,"");
-  e.target.value=digits.replace(/(\d{3})(?=\d)/g,"$1 ").trim();
-});
-
-// ===== BLOQUEAR DÍAS PASADOS =====
-const fechaInput=document.getElementById("fecha");
-const today=new Date();
-today.setHours(0,0,0,0);
-fechaInput.min=today.toISOString().split("T")[0];
-
-// ===== HORARIO 06:00 - 23:30 =====
-const horaSelect=document.getElementById("hora");
-for(let h=6; h<24; h++){
-  ["00","30"].forEach(m=>{
-    const t=String(h).padStart(2,"0")+":"+m;
-    const opt=document.createElement("option");
-    opt.value=t;
-    opt.textContent=t;
-    horaSelect.appendChild(opt);
-  });
-}
-
-// ===== ENVÍO =====
-document.getElementById("form").addEventListener("submit",async(e)=>{
-  e.preventDefault();
-
-  const telefono = document.getElementById("prefix").textContent +
-                   telInput.value.replace(/\s/g,"");
-
-  const data={
-    nombre:nombre.value.trim(),
-    email:email.value.trim(),
-    telefono:telefono,
-    fecha_solicitada:fecha.value+"T"+hora.value,
-    mensaje:mensaje.value.trim()
-  };
-
-  await fetch("https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify(data)
+  // Toggle dropdown (mousedown = más fiable)
+  flagBox.addEventListener("mousedown",(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    dropdown.style.display = (dropdown.style.display === "block") ? "none" : "block";
   });
 
-  alert("Cita enviada correctamente");
-  form.reset();
-});
+  // Cerrar solo si click fuera
+  document.addEventListener("mousedown",(e)=>{
+    if (!flagBox.contains(e.target)) dropdown.style.display = "none";
+  });
 
+  // ====== BLOQUEAR DÍAS PASADOS ======
+  const fechaInput = document.getElementById("fecha");
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  fechaInput.min = today.toISOString().split("T")[0];
+
+  // ====== HORARIO 06:00 - 23:30 (slots de 30) ======
+  const horaSelect = document.getElementById("hora");
+  horaSelect.innerHTML = "";
+  for(let h=6; h<24; h++){
+    ["00","30"].forEach(m=>{
+      const t = String(h).padStart(2,"0")+":"+m;
+      const opt = document.createElement("option");
+      opt.value = t;
+      opt.textContent = t;
+      horaSelect.appendChild(opt);
+    });
+  }
+
+  // ====== FORMATO TEL: separa de 3 en 3 visualmente ======
+  telInput.addEventListener("input",(e)=>{
+    const digits = e.target.value.replace(/\D/g,"");
+    e.target.value = digits.replace(/(\d{3})(?=\d)/g,"$1 ").trim();
+  });
+
+  // ====== MENSAJES PROFESIONALES ======
+  function showOk(msg){
+    statusEl.className = "status ok";
+    statusEl.textContent = msg;
+  }
+  function showErr(msg){
+    statusEl.className = "status err";
+    statusEl.textContent = msg;
+  }
+  function clearStatus(){
+    statusEl.className = "status";
+    statusEl.textContent = "";
+    statusEl.style.display = "none";
+  }
+
+  // ====== SUBMIT ======
+  form.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    clearStatus();
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Enviando...";
+
+    try{
+      const telefonoFull = prefixEl.textContent + telInput.value.replace(/\s/g,"");
+
+      const data = {
+        nombre: document.getElementById("nombre").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        telefono: telefonoFull,
+        fecha_solicitada: fechaInput.value + "T" + horaSelect.value,
+        mensaje: document.getElementById("mensaje").value.trim()
+      };
+
+      const res = await fetch(WEBHOOK_PROD, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(data)
+      });
+
+      if(!res.ok) throw new Error("Respuesta no OK del servidor");
+
+      showOk("Cita enviada correctamente");
+      form.reset();
+
+      // opcional: dejar España por defecto tras reset
+      prefixEl.textContent = "+34";
+      currentFlag.src = "https://flagcdn.com/w40/es.png";
+
+    }catch(err){
+      showErr("No se pudo enviar la cita. Inténtalo de nuevo.");
+    }finally{
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Reservar";
+    }
+  });
 </script>
 
 </body>
