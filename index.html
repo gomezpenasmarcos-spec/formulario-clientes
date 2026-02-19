@@ -1,555 +1,314 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reserva tu cita</title>
 
 <style>
-  body{
-    font-family: Arial, sans-serif;
-    background:#f3f3f3;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    min-height:100vh;
-    margin:0;
-  }
+body{
+  font-family:Arial, sans-serif;
+  background:#f3f3f3;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  margin:0;
+}
 
-  .container{
-    background:#fff;
-    padding:40px;
-    border-radius:20px;
-    width:420px;
-    box-shadow:0 10px 30px rgba(0,0,0,.10);
-    position:relative;
-  }
+.container{
+  background:#fff;
+  padding:40px;
+  border-radius:20px;
+  width:420px;
+  box-shadow:0 10px 30px rgba(0,0,0,.10);
+}
 
-  h2{
-    text-align:center;
-    font-size:32px;
-    margin-bottom:30px;
-  }
+h2{
+  text-align:center;
+  font-size:32px;
+  margin-bottom:28px;
+}
 
-  .field{ margin-bottom:20px; }
+label{
+  display:block;
+  margin:14px 0 6px;
+  font-size:17px;
+}
 
-  label{
-    display:block;
-    font-size:16px;
-    margin-bottom:6px;
-  }
+input, textarea, select{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  font-size:18px;
+  box-sizing:border-box;
+  outline:none;
+}
 
-  input, textarea, select{
-    width:100%;
-    padding:14px;
-    border-radius:12px;
-    border:1px solid #ccc;
-    font-size:18px;
-    box-sizing:border-box;
-    outline:none;
-    background:#fff;
-  }
+textarea{ resize:none; }
 
-  input::placeholder, textarea::placeholder{
-    color:#9aa0a6;
-    opacity:1;
-  }
+.phone-wrapper{
+  display:flex;
+  align-items:center;
+  border:1px solid #ccc;
+  border-radius:12px;
+  overflow:hidden;
+  height:56px;
+  background:#fff;
+}
 
-  textarea{ resize:none; }
+.flag-box{
+  width:70px;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  border-right:1px solid #ddd;
+  background:#f9f9f9;
+  position:relative;
+}
 
-  /* TELÉFONO */
-  .phone-wrapper{
-    display:flex;
-    border:1px solid #ccc;
-    border-radius:12px;
-    height:54px;
-    background:#fff;
-    position:relative;
-    overflow:visible; /* importante para dropdown */
-  }
+.flag-box img{
+  width:28px;
+}
 
-  .flag-box{
-    width:70px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border-right:1px solid #ddd;
-    cursor:pointer;
-    position:relative;
-    user-select:none;
-  }
+.flag-dropdown{
+  position:absolute;
+  top:60px;
+  left:0;
+  background:#fff;
+  border-radius:10px;
+  box-shadow:0 6px 20px rgba(0,0,0,.15);
+  display:none;
+  max-height:300px;
+  overflow-y:auto;
+  z-index:20;
+}
 
-  .flag-box img{
-    width:28px;
-    height:20px;
-    border-radius:3px;
-    object-fit:cover;
-  }
+.flag-option{
+  padding:10px 14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  cursor:pointer;
+}
 
-  .prefix{
-    display:flex;
-    align-items:center;
-    padding:0 10px;
-    font-size:18px;
-    color:#444;
-    white-space:nowrap;
-  }
+.flag-option:hover{
+  background:#f1f1f1;
+}
 
-  .phone-input{
-    flex:1;
-    border:none;
-    outline:none;
-    font-size:18px;
-    padding:14px 14px 14px 6px;
-    min-width:0;
-  }
+.prefix{
+  margin-left:14px;
+  margin-right:8px;
+  font-size:18px;
+  color:#444;
+}
 
-  /* Dropdown países */
-  .flag-dropdown{
-    position:absolute;
-    top:60px;
-    left:0;
-    width:320px;
-    max-height:320px;
-    overflow:auto;
-    background:#fff;
-    border-radius:12px;
-    box-shadow:0 12px 30px rgba(0,0,0,.25);
-    display:none;
-    z-index:999999;
-    border:1px solid #eee;
-  }
+.phone-input{
+  border:none;
+  outline:none;
+  flex:1;
+  font-size:18px;
+}
 
-  .dropdown-head{
-    position:sticky;
-    top:0;
-    background:#fff;
-    padding:10px;
-    border-bottom:1px solid #eee;
-  }
+.error{
+  color:red;
+  font-size:14px;
+  margin-top:6px;
+  display:none;
+}
 
-  .search{
-    width:100%;
-    padding:10px 12px;
-    border-radius:10px;
-    border:1px solid #ddd;
-    font-size:16px;
-  }
+.success{
+  margin-top:15px;
+  font-size:16px;
+  color:green;
+  display:none;
+}
 
-  .flag-option{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:10px 12px;
-    cursor:pointer;
-  }
-
-  .flag-option img{
-    width:26px;
-    height:18px;
-    border-radius:3px;
-    object-fit:cover;
-  }
-
-  .flag-option:hover{ background:#f3f5f9; }
-
-  .country-name{
-    flex:1;
-    font-size:14px;
-    color:#333;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-  }
-
-  .dial{
-    font-size:14px;
-    color:#111;
-    font-weight:600;
-    white-space:nowrap;
-  }
-
-  button{
-    width:100%;
-    padding:16px;
-    border-radius:14px;
-    border:none;
-    background:#2f5bd7;
-    color:#fff;
-    font-size:22px;
-    cursor:pointer;
-    margin-top:8px;
-  }
-  button:hover{ background:#264cc0; }
-
-  .status{
-    margin-top:12px;
-    font-size:16px;
-    display:none;
-  }
-  .status.ok{ color:#15803d; display:block; }
-  .status.err{ color:#b91c1c; display:block; }
+button{
+  width:100%;
+  padding:16px;
+  border-radius:14px;
+  border:none;
+  background:#2f5bd7;
+  color:#fff;
+  font-size:22px;
+  cursor:pointer;
+  margin-top:14px;
+}
+button:hover{ background:#264cc0; }
 </style>
-
-<!-- Librería seria de teléfonos (validación + formateo por país) -->
-<script src="https://unpkg.com/libphonenumber-js@1.11.7/bundle/libphonenumber-js.min.js"></script>
-
 </head>
+
 <body>
 
 <div class="container">
-  <h2>Reserva tu cita</h2>
+<h2>Reserva tu cita</h2>
 
-  <form id="form" autocomplete="on">
+<form id="form">
 
-    <div class="field">
-      <label>Nombre</label>
-      <input id="nombre" type="text" placeholder="Nombre completo" required />
-    </div>
+<label>Nombre</label>
+<input id="nombre" type="text" placeholder="Nombre completo" required>
 
-    <div class="field">
-      <label>Correo electrónico</label>
-      <input id="email" type="email" placeholder="Correo electrónico" required />
-    </div>
+<label>Correo electrónico</label>
+<input id="email" type="email" placeholder="Correo electrónico" required>
 
-    <div class="field">
-      <label>Teléfono</label>
+<label>Teléfono</label>
 
-      <div class="phone-wrapper">
-        <div class="flag-box" id="flagBox" title="Cambiar país">
-          <img id="currentFlag" src="https://flagcdn.com/w40/es.png" alt="flag" />
-          <div class="flag-dropdown" id="flagDropdown">
-            <div class="dropdown-head">
-              <input id="countrySearch" class="search" type="text" placeholder="Buscar país o prefijo (+34)" />
-            </div>
-            <div id="countriesList"></div>
-          </div>
-        </div>
+<div class="phone-wrapper">
 
-        <div class="prefix" id="prefix">+34</div>
-        <input id="telefono" class="phone-input" type="tel" placeholder="654 654 654" required />
-      </div>
+<div class="flag-box" id="flagBox">
+  <img id="currentFlag" src="https://flagcdn.com/w40/es.png">
+  <div class="flag-dropdown" id="flagDropdown"></div>
+</div>
 
-      <small id="phoneHint" style="display:block;margin-top:8px;color:#6b7280;font-size:13px;">
-        Introduce un número válido.
-      </small>
-    </div>
+<span class="prefix" id="prefix">+34</span>
+<input id="telefono" class="phone-input" type="text" placeholder="654 654 654" required>
 
-    <div class="field">
-      <label>Selecciona el día</label>
-      <input id="fecha" type="date" required />
-    </div>
+</div>
 
-    <div class="field">
-      <label>Selecciona la hora</label>
-      <select id="hora" required></select>
-    </div>
+<div class="error" id="phoneError">Número no válido.</div>
 
-    <div class="field">
-      <label>Motivo</label>
-      <textarea id="mensaje" rows="3" placeholder="Escribe el motivo de la cita" required></textarea>
-    </div>
+<label>Selecciona el día</label>
+<input id="fecha" type="date" required>
 
-    <button type="submit" id="submitBtn">Reservar</button>
-    <div id="status" class="status"></div>
+<label>Selecciona la hora</label>
+<select id="hora" required></select>
 
-  </form>
+<label>Motivo</label>
+<textarea id="mensaje" rows="3" placeholder="Escribe el motivo de la cita" required></textarea>
+
+<button type="submit">Reservar</button>
+
+<div class="success" id="successMsg">
+Cita enviada correctamente.
+</div>
+
+</form>
 </div>
 
 <script>
-  /* ===== CONFIG ===== */
-  const WEBHOOK_PROD = "https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6";
 
-  /* ===== ELEMENTS ===== */
-  const dropdown = document.getElementById("flagDropdown");
-  const flagBox = document.getElementById("flagBox");
-  const currentFlag = document.getElementById("currentFlag");
-  const prefixEl = document.getElementById("prefix");
-  const telInput = document.getElementById("telefono");
-  const phoneHint = document.getElementById("phoneHint");
-  const statusEl = document.getElementById("status");
-  const submitBtn = document.getElementById("submitBtn");
-  const countrySearch = document.getElementById("countrySearch");
-  const countriesList = document.getElementById("countriesList");
+// -------- LISTA COMPLETA DE PAÍSES --------
+const countries = [
+{code:"es", dial:"+34", digits:9},
+{code:"fr", dial:"+33", digits:9},
+{code:"de", dial:"+49", digits:11},
+{code:"gb", dial:"+44", digits:10},
+{code:"us", dial:"+1", digits:10},
+{code:"it", dial:"+39", digits:10},
+{code:"pt", dial:"+351", digits:9},
+{code:"mx", dial:"+52", digits:10},
+{code:"ar", dial:"+54", digits:10},
+{code:"br", dial:"+55", digits:11},
+{code:"co", dial:"+57", digits:10},
+{code:"cl", dial:"+56", digits:9},
+{code:"pe", dial:"+51", digits:9},
+{code:"ve", dial:"+58", digits:10},
+{code:"nl", dial:"+31", digits:9},
+{code:"be", dial:"+32", digits:9},
+{code:"ch", dial:"+41", digits:9},
+{code:"se", dial:"+46", digits:9},
+{code:"no", dial:"+47", digits:8},
+{code:"dk", dial:"+45", digits:8},
+{code:"fi", dial:"+358", digits:9}
+];
 
-  /* ===== STATE ===== */
-  let selectedCountry = "ES"; // ISO2
-  let selectedDial = "+34";
-  let countries = []; // { iso2, name, dial, flagUrl }
+// -------- VARIABLES --------
+const dropdown=document.getElementById("flagDropdown");
+const prefix=document.getElementById("prefix");
+const flagBox=document.getElementById("flagBox");
+const currentFlag=document.getElementById("currentFlag");
+const telInput=document.getElementById("telefono");
+const phoneError=document.getElementById("phoneError");
 
-  /* ===== DATE MIN TODAY ===== */
-  const fecha = document.getElementById("fecha");
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  fecha.min = today.toISOString().split("T")[0];
+let currentCountry=countries[0];
 
-  /* ===== HOURS 06:00 - 23:30 (cada 30 min) ===== */
-  const hora = document.getElementById("hora");
-  for (let h=6; h<24; h++){
-    ["00","30"].forEach(m=>{
-      const t = String(h).padStart(2,"0")+":"+m;
-      const opt = document.createElement("option");
-      opt.value = t;
-      opt.textContent = t;
-      hora.appendChild(opt);
-    });
+// -------- CREAR DROPDOWN --------
+countries.forEach(c=>{
+  const div=document.createElement("div");
+  div.className="flag-option";
+  div.innerHTML=`<img src="https://flagcdn.com/w40/${c.code}.png"> ${c.dial}`;
+  div.onclick=()=>{
+    currentCountry=c;
+    prefix.textContent=c.dial;
+    currentFlag.src=`https://flagcdn.com/w40/${c.code}.png`;
+    dropdown.style.display="none";
+    telInput.value="";
+  };
+  dropdown.appendChild(div);
+});
+
+flagBox.onclick=()=> {
+  dropdown.style.display = dropdown.style.display==="block"?"none":"block";
+};
+
+// -------- FORMATO TELÉFONO --------
+telInput.addEventListener("input",(e)=>{
+  let digits=e.target.value.replace(/\D/g,"");
+
+  if(digits.length>currentCountry.digits){
+    digits=digits.slice(0,currentCountry.digits);
   }
 
-  /* ===== Dropdown toggle ===== */
-  function openDropdown(){
-    dropdown.style.display = "block";
-    countrySearch.value = "";
-    renderCountries("");
-    setTimeout(()=>countrySearch.focus(), 0);
-  }
-  function closeDropdown(){ dropdown.style.display = "none"; }
+  const formatted=digits.replace(/(\d{3})(?=\d)/g,"$1 ").trim();
+  e.target.value=formatted;
 
-  flagBox.addEventListener("click", (e)=>{
-    e.stopPropagation();
-    if (dropdown.style.display === "block") closeDropdown();
-    else openDropdown();
+  if(digits.length!==currentCountry.digits){
+    phoneError.style.display="block";
+  } else {
+    phoneError.style.display="none";
+  }
+});
+
+// -------- FECHA MÍNIMA --------
+const fecha=document.getElementById("fecha");
+const today=new Date();
+today.setHours(0,0,0,0);
+fecha.min=today.toISOString().split("T")[0];
+
+// -------- HORAS 06:00 - 23:30 --------
+const hora=document.getElementById("hora");
+for(let h=6; h<24; h++){
+  ["00","30"].forEach(m=>{
+    const t=String(h).padStart(2,"0")+":"+m;
+    const opt=document.createElement("option");
+    opt.value=t;
+    opt.textContent=t;
+    hora.appendChild(opt);
+  });
+}
+
+// -------- ENVÍO --------
+document.getElementById("form").addEventListener("submit",async(e)=>{
+  e.preventDefault();
+
+  const digits=telInput.value.replace(/\s/g,"");
+  if(digits.length!==currentCountry.digits){
+    phoneError.style.display="block";
+    return;
+  }
+
+  const data={
+    nombre:nombre.value.trim(),
+    email:email.value.trim(),
+    telefono:digits, // SOLO número
+    fecha_solicitada:fecha.value+"T"+hora.value,
+    mensaje:mensaje.value.trim()
+  };
+
+  await fetch("https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify(data)
   });
 
-  document.addEventListener("click", ()=> closeDropdown());
+  document.getElementById("successMsg").style.display="block";
+  form.reset();
+});
 
-  dropdown.addEventListener("click", (e)=>{
-    e.stopPropagation(); // para poder clicar dentro
-  });
-
-  /* ===== Load ALL countries dynamically ===== */
-  async function loadCountries(){
-    // Rest Countries: flags + name + idd (prefijos)
-    const res = await fetch("https://restcountries.com/v3.1/all?fields=cca2,name,idd,flags");
-    if(!res.ok) throw new Error("No countries");
-    const data = await res.json();
-
-    // Convertimos a una lista usable
-    const list = [];
-    for(const c of data){
-      const iso2 = (c.cca2 || "").toUpperCase();
-      if(!iso2) continue;
-
-      // idd: { root:"+34", suffixes:["6","7"] } -> nos interesa root + primer sufijo si aplica
-      const root = c.idd?.root || "";
-      const suffixes = c.idd?.suffixes || [];
-      let dial = root;
-
-      // Si hay sufijos, el prefijo real sería root + sufijo (p.ej +1 + 340)
-      // Para UI, mostramos root si es "usable", y si no, root+primer sufijo.
-      if(root && suffixes.length){
-        // Si root es +1, hay muchos: mejor mostrar root y validar por ISO. El usuario eligirá país.
-        // Para otros casos, root+primer sufijo suele ser correcto.
-        dial = root === "+1" ? "+1" : (root + suffixes[0]);
-      }
-
-      if(!dial || !dial.startsWith("+")) continue;
-
-      const name = c.name?.common || iso2;
-      const flagUrl = c.flags?.png || `https://flagcdn.com/w40/${iso2.toLowerCase()}.png`;
-
-      list.push({ iso2, name, dial, flagUrl });
-    }
-
-    // Orden: primero ES, luego alfabético
-    list.sort((a,b)=>{
-      if(a.iso2==="ES") return -1;
-      if(b.iso2==="ES") return 1;
-      return a.name.localeCompare(b.name, "es");
-    });
-
-    countries = list;
-  }
-
-  function renderCountries(filterText){
-    const q = filterText.trim().toLowerCase();
-    countriesList.innerHTML = "";
-
-    const filtered = countries.filter(c=>{
-      if(!q) return true;
-      return c.name.toLowerCase().includes(q) || c.dial.includes(q) || c.iso2.toLowerCase().includes(q);
-    });
-
-    // Si son MUCHOS, renderizamos max 250 para que no pete el navegador
-    const slice = filtered.slice(0, 250);
-
-    slice.forEach(c=>{
-      const row = document.createElement("div");
-      row.className = "flag-option";
-      row.innerHTML = `
-        <img src="${c.flagUrl}" alt="${c.iso2}">
-        <div class="country-name">${c.name}</div>
-        <div class="dial">${c.dial}</div>
-      `;
-      row.addEventListener("click", ()=>{
-        setCountry(c.iso2, c.dial, c.flagUrl);
-        closeDropdown();
-        // Re-formateo según país
-        formatAsYouType();
-        validatePhone(false);
-      });
-      countriesList.appendChild(row);
-    });
-
-    if(filtered.length > 250){
-      const more = document.createElement("div");
-      more.style.padding = "10px 12px";
-      more.style.color = "#6b7280";
-      more.style.fontSize = "13px";
-      more.textContent = `Mostrando 250 de ${filtered.length}. Usa el buscador para filtrar.`;
-      countriesList.appendChild(more);
-    }
-  }
-
-  countrySearch.addEventListener("input", (e)=>{
-    renderCountries(e.target.value);
-  });
-
-  function setCountry(iso2, dial, flagUrl){
-    selectedCountry = iso2.toUpperCase();
-    selectedDial = dial;
-    prefixEl.textContent = dial;
-    currentFlag.src = flagUrl || `https://flagcdn.com/w40/${selectedCountry.toLowerCase()}.png`;
-  }
-
-  /* ===== Auto-detect country by IP ===== */
-  async function detectCountryByIP(){
-    try{
-      // ipapi: devuelve country_code (ISO2)
-      const res = await fetch("https://ipapi.co/json/");
-      if(!res.ok) throw new Error("ipapi fail");
-      const j = await res.json();
-      const iso2 = (j.country_code || "").toUpperCase();
-      if(!iso2) throw new Error("no country_code");
-
-      // elegimos el país detectado si existe en la lista
-      const found = countries.find(c=>c.iso2===iso2);
-      if(found){
-        setCountry(found.iso2, found.dial, found.flagUrl);
-      }
-    }catch{
-      // Si falla, nos quedamos en ES
-    }
-  }
-
-  /* ===== Phone: format as you type + validation by country ===== */
-  function formatAsYouType(){
-    const rawDigits = telInput.value.replace(/[^\d]/g,"");
-    const ayt = new libphonenumber.AsYouType(selectedCountry);
-    telInput.value = ayt.input(rawDigits);
-  }
-
-  function validatePhone(showError=true){
-    const rawDigits = telInput.value.replace(/[^\d]/g,"");
-    if(!rawDigits){
-      if(showError){
-        phoneHint.style.color = "#b91c1c";
-        phoneHint.textContent = "Introduce un número.";
-      }
-      return false;
-    }
-
-    // Construimos número completo +E.164 aproximado para parseo
-    const full = `${selectedDial}${rawDigits}`;
-
-    try{
-      const phone = libphonenumber.parsePhoneNumberFromString(full, selectedCountry);
-      if(!phone || !phone.isValid()){
-        if(showError){
-          phoneHint.style.color = "#b91c1c";
-          phoneHint.textContent = "Número no válido para el país seleccionado.";
-        }
-        return false;
-      }
-
-      // Si es válido, mostramos formato bonito y guardamos E.164 para enviar
-      phoneHint.style.color = "#15803d";
-      phoneHint.textContent = `Válido: ${phone.formatInternational()}`;
-      return phone.number; // E.164
-    }catch{
-      if(showError){
-        phoneHint.style.color = "#b91c1c";
-        phoneHint.textContent = "Número no válido para el país seleccionado.";
-      }
-      return false;
-    }
-  }
-
-  telInput.addEventListener("input", ()=>{
-    formatAsYouType();
-    // validación suave sin molestar cada tecla
-    validatePhone(false);
-  });
-
-  telInput.addEventListener("blur", ()=>{
-    validatePhone(true);
-  });
-
-  /* ===== Init ===== */
-  (async function init(){
-    try{
-      await loadCountries();                 // TODOS los países
-      renderCountries("");                   // render inicial
-      await detectCountryByIP();             // autodetección
-      formatAsYouType();                     // alinear formato con país
-      validatePhone(false);
-    }catch{
-      // fallback mínimo si algo externo falla
-      // (seguirá funcionando con ES)
-    }
-  })();
-
-  /* ===== Submit ===== */
-  document.getElementById("form").addEventListener("submit", async (e)=>{
-    e.preventDefault();
-    statusEl.style.display = "none";
-
-    // Validación final fuerte
-    const e164 = validatePhone(true);
-    if(!e164) return;
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Enviando...";
-
-    try{
-      const data = {
-        nombre: nombre.value.trim(),
-        email: email.value.trim(),
-        telefono: e164, // <-- formato E.164 (pro)
-        fecha_solicitada: fecha.value + "T" + hora.value,
-        mensaje: mensaje.value.trim(),
-        pais: selectedCountry,
-        prefijo: selectedDial
-      };
-
-      const res = await fetch(WEBHOOK_PROD, {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify(data)
-      });
-
-      if(!res.ok) throw new Error("Webhook fail");
-
-      statusEl.className = "status ok";
-      statusEl.textContent = "Cita enviada correctamente";
-      statusEl.style.display = "block";
-
-      form.reset();
-
-      // tras reset, mantenemos país detectado y re-formateo
-      setTimeout(()=>{
-        formatAsYouType();
-        validatePhone(false);
-      }, 0);
-
-    }catch{
-      statusEl.className = "status err";
-      statusEl.textContent = "Error al enviar la cita";
-      statusEl.style.display = "block";
-    }
-
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Reservar";
-  });
 </script>
 
 </body>
