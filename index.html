@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Reserva tu cita</title>
 
 <style>
 body{
-  font-family:Arial, sans-serif;
+  font-family: Arial, sans-serif;
   background:#f3f3f3;
   display:flex;
   justify-content:center;
@@ -27,13 +27,15 @@ body{
 h2{
   text-align:center;
   font-size:32px;
-  margin-bottom:28px;
+  margin-bottom:30px;
 }
+
+.field{ margin-bottom:22px; }
 
 label{
   display:block;
-  margin:14px 0 6px;
-  font-size:17px;
+  font-size:16px;
+  margin-bottom:6px;
 }
 
 input, textarea, select{
@@ -44,87 +46,94 @@ input, textarea, select{
   font-size:18px;
   box-sizing:border-box;
   outline:none;
+  background:#fff;
 }
 
 textarea{ resize:none; }
 
+/* TELÉFONO */
 .phone-wrapper{
   display:flex;
-  align-items:center;
   border:1px solid #ccc;
   border-radius:12px;
-  overflow:hidden;
-  height:56px;
+  height:54px;
   background:#fff;
+  overflow:hidden;
 }
 
 .flag-box{
   width:70px;
-  height:100%;
   display:flex;
   align-items:center;
   justify-content:center;
-  cursor:pointer;
   border-right:1px solid #ddd;
-  background:#f9f9f9;
+  cursor:pointer;
   position:relative;
+  user-select:none;
+  background:#fff;
 }
 
 .flag-box img{
   width:28px;
+  height:20px;
+  border-radius:3px;
+  object-fit:cover;
+}
+
+.prefix{
+  display:flex;
+  align-items:center;
+  padding:0 10px;
+  font-size:18px;
+  color:#444;
+  white-space:nowrap;
+}
+
+.phone-input{
+  flex:1;
+  border:none;
+  outline:none;
+  font-size:18px;
+  padding:14px 14px 14px 6px;
 }
 
 .flag-dropdown{
   position:absolute;
   top:60px;
   left:0;
-  background:#fff;
-  border-radius:10px;
-  box-shadow:0 6px 20px rgba(0,0,0,.15);
-  display:none;
+  width:300px;
   max-height:300px;
-  overflow-y:auto;
-  z-index:20;
+  overflow:auto;
+  background:#fff;
+  border-radius:12px;
+  box-shadow:0 12px 30px rgba(0,0,0,.25);
+  display:none;
+  z-index:9999;
 }
 
 .flag-option{
-  padding:10px 14px;
   display:flex;
   align-items:center;
   gap:10px;
+  padding:10px 12px;
   cursor:pointer;
 }
 
-.flag-option:hover{
-  background:#f1f1f1;
+.flag-option:hover{ background:#f3f5f9; }
+
+.flag-option img{
+  width:26px;
+  height:18px;
 }
 
-.prefix{
-  margin-left:14px;
-  margin-right:8px;
-  font-size:18px;
-  color:#444;
-}
-
-.phone-input{
-  border:none;
-  outline:none;
+.country-name{
   flex:1;
-  font-size:18px;
-}
-
-.error{
-  color:red;
   font-size:14px;
-  margin-top:6px;
-  display:none;
 }
 
-.success{
-  margin-top:15px;
-  font-size:16px;
-  color:green;
-  display:none;
+.dial{
+  font-size:14px;
+  font-weight:600;
 }
 
 button{
@@ -136,10 +145,27 @@ button{
   color:#fff;
   font-size:22px;
   cursor:pointer;
-  margin-top:14px;
 }
+
 button:hover{ background:#264cc0; }
+
+.status{
+  margin-top:12px;
+  font-size:16px;
+  display:none;
+}
+
+.status.ok{ color:#15803d; display:block; }
+.status.err{ color:#b91c1c; display:block; }
+
+.hint{
+  margin-top:6px;
+  font-size:13px;
+  color:#6b7280;
+}
 </style>
+
+<script src="https://unpkg.com/libphonenumber-js@1.11.7/bundle/libphonenumber-js.min.js"></script>
 </head>
 
 <body>
@@ -149,12 +175,17 @@ button:hover{ background:#264cc0; }
 
 <form id="form">
 
+<div class="field">
 <label>Nombre</label>
 <input id="nombre" type="text" placeholder="Nombre completo" required>
+</div>
 
+<div class="field">
 <label>Correo electrónico</label>
 <input id="email" type="email" placeholder="Correo electrónico" required>
+</div>
 
+<div class="field">
 <label>Teléfono</label>
 
 <div class="phone-wrapper">
@@ -164,152 +195,130 @@ button:hover{ background:#264cc0; }
   <div class="flag-dropdown" id="flagDropdown"></div>
 </div>
 
-<span class="prefix" id="prefix">+34</span>
-<input id="telefono" class="phone-input" type="text" placeholder="654 654 654" required>
+<div class="prefix" id="prefix">+34</div>
+<input id="telefono" class="phone-input" type="tel" placeholder="654 654 654" required>
 
 </div>
 
-<div class="error" id="phoneError">Número no válido.</div>
+<div class="hint" id="phoneHint">Introduce un número válido.</div>
+</div>
 
+<div class="field">
 <label>Selecciona el día</label>
 <input id="fecha" type="date" required>
+</div>
 
+<div class="field">
 <label>Selecciona la hora</label>
 <select id="hora" required></select>
+</div>
 
+<div class="field">
 <label>Motivo</label>
 <textarea id="mensaje" rows="3" placeholder="Escribe el motivo de la cita" required></textarea>
-
-<button type="submit">Reservar</button>
-
-<div class="success" id="successMsg">
-Cita enviada correctamente.
 </div>
+
+<button type="submit" id="submitBtn">Reservar</button>
+<div id="status" class="status"></div>
 
 </form>
 </div>
 
 <script>
 
-// -------- LISTA COMPLETA DE PAÍSES --------
-const countries = [
-{code:"es", dial:"+34", digits:9},
-{code:"fr", dial:"+33", digits:9},
-{code:"de", dial:"+49", digits:11},
-{code:"gb", dial:"+44", digits:10},
-{code:"us", dial:"+1", digits:10},
-{code:"it", dial:"+39", digits:10},
-{code:"pt", dial:"+351", digits:9},
-{code:"mx", dial:"+52", digits:10},
-{code:"ar", dial:"+54", digits:10},
-{code:"br", dial:"+55", digits:11},
-{code:"co", dial:"+57", digits:10},
-{code:"cl", dial:"+56", digits:9},
-{code:"pe", dial:"+51", digits:9},
-{code:"ve", dial:"+58", digits:10},
-{code:"nl", dial:"+31", digits:9},
-{code:"be", dial:"+32", digits:9},
-{code:"ch", dial:"+41", digits:9},
-{code:"se", dial:"+46", digits:9},
-{code:"no", dial:"+47", digits:8},
-{code:"dk", dial:"+45", digits:8},
-{code:"fi", dial:"+358", digits:9}
-];
+const WEBHOOK="https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6";
 
-// -------- VARIABLES --------
-const dropdown=document.getElementById("flagDropdown");
-const prefix=document.getElementById("prefix");
-const flagBox=document.getElementById("flagBox");
-const currentFlag=document.getElementById("currentFlag");
-const telInput=document.getElementById("telefono");
-const phoneError=document.getElementById("phoneError");
-
-let currentCountry=countries[0];
-
-// -------- CREAR DROPDOWN --------
-countries.forEach(c=>{
-  const div=document.createElement("div");
-  div.className="flag-option";
-  div.innerHTML=`<img src="https://flagcdn.com/w40/${c.code}.png"> ${c.dial}`;
-  div.onclick=()=>{
-    currentCountry=c;
-    prefix.textContent=c.dial;
-    currentFlag.src=`https://flagcdn.com/w40/${c.code}.png`;
-    dropdown.style.display="none";
-    telInput.value="";
-  };
-  dropdown.appendChild(div);
-});
-
-flagBox.onclick=()=> {
-  dropdown.style.display = dropdown.style.display==="block"?"none":"block";
-};
-
-// -------- FORMATO TELÉFONO --------
-telInput.addEventListener("input",(e)=>{
-  let digits=e.target.value.replace(/\D/g,"");
-
-  if(digits.length>currentCountry.digits){
-    digits=digits.slice(0,currentCountry.digits);
-  }
-
-  const formatted=digits.replace(/(\d{3})(?=\d)/g,"$1 ").trim();
-  e.target.value=formatted;
-
-  if(digits.length!==currentCountry.digits){
-    phoneError.style.display="block";
-  } else {
-    phoneError.style.display="none";
-  }
-});
-
-// -------- FECHA MÍNIMA --------
 const fecha=document.getElementById("fecha");
 const today=new Date();
 today.setHours(0,0,0,0);
 fecha.min=today.toISOString().split("T")[0];
 
-// -------- HORAS 06:00 - 23:30 --------
 const hora=document.getElementById("hora");
-for(let h=6; h<24; h++){
-  ["00","30"].forEach(m=>{
-    const t=String(h).padStart(2,"0")+":"+m;
-    const opt=document.createElement("option");
-    opt.value=t;
-    opt.textContent=t;
-    hora.appendChild(opt);
-  });
+for(let h=6;h<24;h++){
+["00","30"].forEach(m=>{
+const t=String(h).padStart(2,"0")+":"+m;
+const opt=document.createElement("option");
+opt.value=t;
+opt.textContent=t;
+hora.appendChild(opt);
+});
 }
 
-// -------- ENVÍO --------
+let selectedCountry="ES";
+let selectedDial="+34";
+
+const telInput=document.getElementById("telefono");
+const phoneHint=document.getElementById("phoneHint");
+
+function formatPhone(){
+const digits=telInput.value.replace(/[^\d]/g,"");
+const ayt=new libphonenumber.AsYouType(selectedCountry);
+telInput.value=ayt.input(digits);
+}
+
+function validatePhone(){
+const digits=telInput.value.replace(/[^\d]/g,"");
+if(!digits){
+phoneHint.style.color="#b91c1c";
+phoneHint.textContent="Introduce un número.";
+return false;
+}
+try{
+const full=selectedDial+digits;
+const phone=libphonenumber.parsePhoneNumberFromString(full,selectedCountry);
+if(!phone||!phone.isValid()){
+phoneHint.style.color="#b91c1c";
+phoneHint.textContent="Número no válido para el país seleccionado.";
+return false;
+}
+phoneHint.style.color="#15803d";
+phoneHint.textContent="Número válido.";
+return true;
+}catch{
+return false;
+}
+}
+
+telInput.addEventListener("input",()=>{
+formatPhone();
+validatePhone();
+});
+
 document.getElementById("form").addEventListener("submit",async(e)=>{
-  e.preventDefault();
+e.preventDefault();
 
-  const digits=telInput.value.replace(/\s/g,"");
-  if(digits.length!==currentCountry.digits){
-    phoneError.style.display="block";
-    return;
-  }
+if(!validatePhone()) return;
 
-  const data={
-    nombre:nombre.value.trim(),
-    email:email.value.trim(),
-    telefono:digits, // SOLO número
-    fecha_solicitada:fecha.value+"T"+hora.value,
-    mensaje:mensaje.value.trim()
-  };
+const numeroSolo=telInput.value.replace(/[^\d]/g,"");
 
-  await fetch("https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify(data)
-  });
+const data={
+nombre:nombre.value.trim(),
+email:email.value.trim(),
+telefono:numeroSolo, // 👈 SOLO NÚMERO
+fecha_solicitada:fecha.value+"T"+hora.value,
+mensaje:mensaje.value.trim()
+};
 
-  document.getElementById("successMsg").style.display="block";
-  form.reset();
+try{
+await fetch(WEBHOOK,{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify(data)
+});
+
+status.className="status ok";
+status.textContent="Cita enviada correctamente.";
+status.style.display="block";
+form.reset();
+phoneHint.textContent="Introduce un número válido.";
+phoneHint.style.color="#6b7280";
+}catch{
+status.className="status err";
+status.textContent="Error al enviar la cita.";
+status.style.display="block";
+}
 });
 
 </script>
-
 </body>
 </html>
