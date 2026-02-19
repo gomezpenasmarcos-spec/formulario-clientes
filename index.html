@@ -200,8 +200,7 @@ button:disabled{
 .hint.good{ color:#15803d; }
 </style>
 
-<!-- IMPORTANTE: USAR EL BUNDLE MAX (trae ejemplos reales por país) -->
-<script src="https://unpkg.com/libphonenumber-js@1.11.7/bundle/libphonenumber-js.max.min.js"></script>
+<script src="https://unpkg.com/libphonenumber-js@1.11.7/bundle/libphonenumber-js.min.js"></script>
 </head>
 
 <body>
@@ -335,6 +334,7 @@ function slotToMinutes(slotHHMM){
 }
 
 function nextAllowedMinute(now, step){
+  // step=30 => redondea hacia arriba al siguiente múltiplo de 30
   const m = minutesSinceMidnight(now);
   const mod = m % step;
   return mod === 0 ? m : (m + (step - mod));
@@ -343,21 +343,27 @@ function nextAllowedMinute(now, step){
 function renderHours(){
   hora.innerHTML = "";
 
+  // si aún no eligió fecha, no pintamos nada raro (pero dejamos slots completos)
   const selected = fecha.value;
   const today = localDateYYYYMMDD(new Date());
+
   const isToday = selected && selected === today;
 
   let minMinuteAllowed = null;
 
   if(isToday){
     const now = new Date();
+
+    // Si ahora son 20:16 => siguiente slot permitido = 20:30
+    // Si ahora son 20:30 exacto => siguiente slot permitido = 20:30 (permitido)
     minMinuteAllowed = nextAllowedMinute(now, 30);
   }
 
+  // Pintar slots
   for(const slot of ALL_SLOTS){
     if(isToday){
       const slotMin = slotToMinutes(slot);
-      if(slotMin < minMinuteAllowed) continue;
+      if(slotMin < minMinuteAllowed) continue; // elimina horas anteriores
     }
     const opt = document.createElement("option");
     opt.value = slot;
@@ -365,6 +371,7 @@ function renderHours(){
     hora.appendChild(opt);
   }
 
+  // Si hoy ya no quedan horas (p.ej. 23:40)
   if(isToday && hora.options.length === 0){
     const opt = document.createElement("option");
     opt.value = "";
@@ -375,15 +382,20 @@ function renderHours(){
   }
 }
 
+// Render inicial
 renderHours();
 
+// Al cambiar fecha => recalcular
 fecha.addEventListener("change", () => {
+  // Asegura min date y no pasado, y luego horas
   setMinDateToToday();
   enforceDateNotPast();
   renderHours();
 });
 
+// Refresco automático cada 30s (para que a las 20:30 “desaparezca” 20:00 sin recargar)
 setInterval(() => {
+  // Si está en hoy, refresca horas
   renderHours();
 }, 30_000);
 
@@ -477,9 +489,13 @@ function renderCountries(filterText){
       setCountry(c.iso2, c.dial, c.flagUrl);
       closeDropdown();
 
+      // reset input al cambiar país
       telInput.value = "";
       phoneHint.className="hint";
       phoneHint.textContent = hintTextForMax();
+
+      // placeholder dinámico recalculado
+      setDynamicPlaceholder(selectedCountry);
     });
     countriesList.appendChild(row);
   }
@@ -500,8 +516,10 @@ function setCountry(iso2, dial, flagUrl){
   currentFlag.src = flagUrl || `https://flagcdn.com/w40/${selectedCountry.toLowerCase()}.png`;
   currentFlag.alt = selectedCountry;
 
+  // recalcular límite al cambiar país
   currentMaxDigits = getMaxDigitsForCountry(selectedCountry);
-  phoneHint.textContent = hintTextForMax();
+
+  // placeholder dinámico por país
   setDynamicPlaceholder(selectedCountry);
 }
 
@@ -518,7 +536,8 @@ async function detectCountryByIP(){
 }
 
 /* =========================
-   TELÉFONO: PLACEHOLDER + BLOQUEO DURO POR PAÍS (USANDO EJEMPLO REAL)
+   TELÉFONO: FORMATEO + VALIDACIÓN + BLOQUEO DURO (POR PAÍS)
+   + PLACEHOLDER DINÁMICO POR PAÍS
    ========================= */
 const telInput = document.getElementById("telefono");
 const phoneHint = document.getElementById("phoneHint");
@@ -527,24 +546,32 @@ function rawDigits(){
   return telInput.value.replace(/[^\d]/g,"");
 }
 
-/* EJEMPLO REAL -> longitud real */
-function getExampleNationalNumber(country){
+/* Overrides típicos (solo por si el ejemplo falla) */
+const hardMaxByCountry = {
+  ES: 9, FR: 9, PT: 9, IT: 10, GB: 10,
+  US: 10, CA: 10, MX: 10, AR: 10, BR: 11,
+  CO: 10, CL: 9, PE: 9,
+  DE: 11, NL: 9, BE: 9, CH: 9,
+  SE: 9, NO: 8, DK: 8, FI: 9, IE: 9,
+  PL: 9, CZ: 9, RO: 9, GR: 10, TR: 10, UA: 9
+};
+
+function getMaxDigitsForCountry(country){
+  // 1) hard override si existe
+  if(hardMaxByCountry[country]) return hardMaxByCountry[country];
+
+  // 2) automático: ejemplo del país (si está disponible en este bundle)
   try{
     if(typeof libphonenumber.getExampleNumber === "function"){
       const ex = libphonenumber.getExampleNumber(country);
-      if(ex && ex.nationalNumber) return String(ex.nationalNumber);
+      if(ex && ex.nationalNumber){
+        const len = String(ex.nationalNumber).length;
+        if(len >= 4 && len <= 15) return len;
+      }
     }
   }catch{}
-  return null;
-}
 
-function getMaxDigitsForCountry(country){
-  const ex = getExampleNationalNumber(country);
-  if(ex){
-    const len = ex.replace(/\D/g,"").length;
-    if(len >= 4 && len <= 15) return len;
-  }
-  // fallback último (solo si algún país raro no tiene ejemplo)
+  // 3) fallback
   return 15;
 }
 
@@ -555,26 +582,33 @@ function hintTextForMax(){
 }
 phoneHint.textContent = hintTextForMax();
 
-/* placeholder: formato nacional real del país */
+/* placeholder dinámico por país */
+function makeFallbackPlaceholderByMax(maxDigits){
+  const len = Math.min(Math.max(maxDigits, 6), 15);
+  let digits = "";
+  for(let i=1;i<=len;i++){
+    digits += String((i%10));
+  }
+  return digits.replace(/(.{3})/g,"$1 ").trim();
+}
+
 function setDynamicPlaceholder(country){
-  const ex = getExampleNationalNumber(country);
-  if(ex){
-    const ayt = new libphonenumber.AsYouType(country);
-    const formatted = ayt.input(ex.replace(/\D/g,""));
-    if(formatted && formatted.length >= 6){
-      telInput.placeholder = formatted;
-      return;
-    }
-  }
-  // fallback: placeholder por longitud
-  const len = getMaxDigitsForCountry(country);
-  const digits = Array.from({length: len}, (_,i)=> String((i+1)%10)).join("");
   try{
-    const ayt = new libphonenumber.AsYouType(country);
-    telInput.placeholder = ayt.input(digits);
-  }catch{
-    telInput.placeholder = digits;
-  }
+    if(typeof libphonenumber.getExampleNumber === "function"){
+      const ex = libphonenumber.getExampleNumber(country);
+      if(ex && ex.nationalNumber){
+        const ayt = new libphonenumber.AsYouType(country);
+        const formatted = ayt.input(String(ex.nationalNumber));
+        if(formatted && formatted.length >= 6){
+          telInput.placeholder = formatted;
+          return;
+        }
+      }
+    }
+  }catch{}
+
+  const max = getMaxDigitsForCountry(country);
+  telInput.placeholder = makeFallbackPlaceholderByMax(max);
 }
 
 function formatPhone(){
@@ -634,7 +668,7 @@ function validatePhone(showError){
   }
 }
 
-/* Bloqueo duro: impide superar el máximo */
+/* Bloqueo duro (teclado/paste): impide superar el máximo */
 telInput.addEventListener("beforeinput", (e)=>{
   if(e.inputType !== "insertText" && e.inputType !== "insertFromPaste") return;
 
@@ -673,8 +707,10 @@ telInput.addEventListener("blur", ()=>{
 
   currentMaxDigits = getMaxDigitsForCountry(selectedCountry);
   phoneHint.textContent = hintTextForMax();
+
   setDynamicPlaceholder(selectedCountry);
 
+  // asegurar horas iniciales correctas si ya viene con fecha por defecto del browser
   renderHours();
 })();
 
@@ -716,6 +752,7 @@ form.addEventListener("submit", async (e)=>{
 
     form.reset();
 
+    // Mantener país/prefijo, reset teléfono/hint/placeholder
     telInput.value="";
     currentMaxDigits = getMaxDigitsForCountry(selectedCountry);
     phoneHint.className="hint";
