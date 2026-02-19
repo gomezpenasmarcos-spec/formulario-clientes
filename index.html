@@ -47,7 +47,7 @@ textarea {
     align-items: center;
     border: 1px solid #ccc;
     border-radius: 12px;
-    padding: 6px;
+    padding: 6px 10px;
     margin-bottom: 18px;
 }
 
@@ -56,13 +56,17 @@ textarea {
     background: transparent;
     font-size: 22px;
     cursor: pointer;
-    width: 60px;
+    width: 55px;
+}
+
+.flag-select option {
+    font-size: 18px;
 }
 
 .prefix {
     font-size: 16px;
-    margin-right: 6px;
-    font-weight: bold;
+    margin: 0 6px;
+    color: #333;
 }
 
 .phone-input {
@@ -103,11 +107,11 @@ button:hover {
         <label>Teléfono</label>
         <div class="phone-wrapper">
             <select id="country" class="flag-select">
-                <option value="+34" data-prefix="+34">🇪🇸</option>
-                <option value="+33" data-prefix="+33">🇫🇷</option>
-                <option value="+49" data-prefix="+49">🇩🇪</option>
-                <option value="+39" data-prefix="+39">🇮🇹</option>
-                <option value="+44" data-prefix="+44">🇬🇧</option>
+                <option value="+34">🇪🇸</option>
+                <option value="+33">🇫🇷</option>
+                <option value="+49">🇩🇪</option>
+                <option value="+39">🇮🇹</option>
+                <option value="+44">🇬🇧</option>
             </select>
             <span class="prefix" id="prefix">+34</span>
             <input type="text" id="telefono" class="phone-input" placeholder="654 654 654" required>
@@ -146,7 +150,7 @@ for (let h = 6; h < 24; h++) {
     });
 }
 
-// 🔒 CAMBIO AUTOMÁTICO DE PREFIJO SEGÚN BANDERA
+// 🔒 CAMBIO AUTOMÁTICO DE PREFIJO
 const countrySelect = document.getElementById("country");
 const prefixSpan = document.getElementById("prefix");
 
