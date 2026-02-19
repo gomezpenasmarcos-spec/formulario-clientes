@@ -1,54 +1,269 @@
-<label>Teléfono</label>
-<div class="phone-wrapper">
-  <input type="tel" id="telefono" required />
-</div>
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/css/intlTelInput.css"/>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reserva tu cita</title>
 
 <style>
-.phone-wrapper {
-  position: relative;
+body{
+  font-family:Arial, sans-serif;
+  background:#f3f3f3;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  margin:0;
 }
 
-.iti {
-  width: 100%;
+.container{
+  background:#fff;
+  padding:40px;
+  border-radius:20px;
+  width:420px;
+  box-shadow:0 10px 30px rgba(0,0,0,.10);
 }
 
-.iti input {
-  padding-left: 120px !important;
+h2{
+  text-align:center;
+  font-size:32px;
+  margin-bottom:28px;
 }
 
-.iti__flag-container {
-  left: 0;
+label{
+  display:block;
+  margin:12px 0 6px;
+  font-size:17px;
 }
 
-.iti__selected-flag {
-  background: transparent !important;
-  padding: 0 12px;
-  border-right: 1px solid #ddd;
+input, textarea, select{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  font-size:18px;
+  box-sizing:border-box;
+  outline:none;
 }
 
-.iti__dial-code {
-  color: #666;
-  font-weight: 400;
+textarea{ resize:none; }
+
+.phone-group{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-bottom:15px;
 }
 
-.iti__selected-flag {
-  display: flex;
-  align-items: center;
-  height: 100%;
+.flag-box{
+  width:60px;
+  height:54px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  position:relative;
+  background:#fff;
 }
+
+.flag-box img{
+  width:28px;
+  height:20px;
+  object-fit:cover;
+}
+
+.flag-dropdown{
+  position:absolute;
+  top:60px;
+  left:0;
+  background:#fff;
+  border-radius:10px;
+  box-shadow:0 6px 20px rgba(0,0,0,.15);
+  display:none;
+  flex-direction:column;
+  overflow:hidden;
+  z-index:10;
+}
+
+.flag-option{
+  padding:10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+}
+
+.flag-option:hover{
+  background:#f1f1f1;
+}
+
+.phone-field{
+  flex:1;
+  display:flex;
+  align-items:center;
+  border:1px solid #ccc;
+  border-radius:12px;
+  padding:0 14px;
+  height:54px;
+  background:#fff;
+}
+
+.prefix{
+  margin-right:8px;
+  font-size:18px;
+  color:#444;
+}
+
+.phone-input{
+  border:none;
+  outline:none;
+  flex:1;
+  font-size:18px;
+}
+
+button{
+  width:100%;
+  padding:16px;
+  border-radius:14px;
+  border:none;
+  background:#2f5bd7;
+  color:#fff;
+  font-size:22px;
+  cursor:pointer;
+  margin-top:12px;
+}
+button:hover{ background:#264cc0; }
 </style>
+</head>
 
-<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/js/intlTelInput.min.js"></script>
+<body>
+
+<div class="container">
+<h2>Reserva tu cita</h2>
+
+<form id="form">
+
+<input id="nombre" type="text" placeholder="Nombre completo" required>
+<input id="email" type="email" placeholder="Correo electrónico" required>
+
+<label>Teléfono</label>
+
+<div class="phone-group">
+
+<div class="flag-box" id="flagBox">
+  <img id="currentFlag" src="https://flagcdn.com/w40/es.png">
+  
+  <div class="flag-dropdown" id="flagDropdown">
+    <div class="flag-option" data-code="+34" data-flag="es">
+      <img src="https://flagcdn.com/w40/es.png"> +34
+    </div>
+    <div class="flag-option" data-code="+33" data-flag="fr">
+      <img src="https://flagcdn.com/w40/fr.png"> +33
+    </div>
+    <div class="flag-option" data-code="+49" data-flag="de">
+      <img src="https://flagcdn.com/w40/de.png"> +49
+    </div>
+    <div class="flag-option" data-code="+44" data-flag="gb">
+      <img src="https://flagcdn.com/w40/gb.png"> +44
+    </div>
+  </div>
+</div>
+
+<div class="phone-field">
+  <span class="prefix" id="prefix">+34</span>
+  <input id="telefono" class="phone-input" type="text" placeholder="654 654 654" required>
+</div>
+
+</div>
+
+<label>Selecciona el día</label>
+<input id="fecha" type="date" required>
+
+<label>Selecciona la hora</label>
+<select id="hora" required></select>
+
+<label>Motivo</label>
+<textarea id="mensaje" rows="3" placeholder="Escribe el motivo de la cita" required></textarea>
+
+<button type="submit">Reservar</button>
+
+</form>
+</div>
 
 <script>
-const phoneInput = document.querySelector("#telefono");
 
-const iti = window.intlTelInput(phoneInput, {
-  initialCountry: "es",
-  separateDialCode: false,
-  preferredCountries: ["es", "fr", "de", "gb", "us"],
-  utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/js/utils.js"
+// Bloquear días anteriores
+const fechaInput = document.getElementById("fecha");
+const today = new Date();
+today.setHours(0,0,0,0);
+fechaInput.min = today.toISOString().split("T")[0];
+
+// Horario 06:00 - 23:30
+const horaSelect = document.getElementById("hora");
+for(let h=6; h<24; h++){
+  ["00","30"].forEach(m=>{
+    const t = String(h).padStart(2,"0")+":"+m;
+    const opt=document.createElement("option");
+    opt.value=t;
+    opt.textContent=t;
+    horaSelect.appendChild(opt);
+  });
+}
+
+// Teléfono formato
+const telInput=document.getElementById("telefono");
+telInput.addEventListener("input",(e)=>{
+  const digits=e.target.value.replace(/\D/g,"");
+  e.target.value=digits.replace(/(\d{3})(?=\d)/g,"$1 ").trim();
 });
+
+// Dropdown bandera
+const flagBox=document.getElementById("flagBox");
+const dropdown=document.getElementById("flagDropdown");
+const currentFlag=document.getElementById("currentFlag");
+const prefix=document.getElementById("prefix");
+
+flagBox.addEventListener("click",()=>{
+  dropdown.style.display = dropdown.style.display==="flex"?"none":"flex";
+});
+
+document.querySelectorAll(".flag-option").forEach(opt=>{
+  opt.addEventListener("click",()=>{
+    const code=opt.dataset.code;
+    const flag=opt.dataset.flag;
+    prefix.textContent=code;
+    currentFlag.src="https://flagcdn.com/w40/"+flag+".png";
+    dropdown.style.display="none";
+  });
+});
+
+// Envío PRODUCCIÓN
+document.getElementById("form").addEventListener("submit",async(e)=>{
+  e.preventDefault();
+
+  const telefono = prefix.textContent + telInput.value.replace(/\s/g,"");
+
+  const data={
+    nombre:nombre.value.trim(),
+    email:email.value.trim(),
+    telefono:telefono,
+    fecha_solicitada:fecha.value+"T"+hora.value,
+    mensaje:mensaje.value.trim()
+  };
+
+  await fetch("https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify(data)
+  });
+
+  alert("Cita enviada correctamente");
+  form.reset();
+});
+
 </script>
+
+</body>
+</html>
