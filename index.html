@@ -30,7 +30,7 @@ h2{
   margin-bottom:30px;
 }
 
-.field{ margin-bottom:22px; }
+.field{ margin-bottom:22px; position:relative; }
 
 label{
   display:block;
@@ -58,8 +58,7 @@ textarea{ resize:none; }
   border-radius:12px;
   height:54px;
   background:#fff;
-  overflow:visible; /* importante para que el dropdown no se corte */
-  position:relative;
+  overflow:hidden; /* <- para mantener esquinas perfectas */
 }
 
 .flag-box{
@@ -69,7 +68,6 @@ textarea{ resize:none; }
   justify-content:center;
   border-right:1px solid #ddd;
   cursor:pointer;
-  position:relative;
   user-select:none;
   background:#fff;
   flex:0 0 70px;
@@ -100,11 +98,12 @@ textarea{ resize:none; }
   min-width:0;
 }
 
+/* Dropdown fuera del wrapper (para no romper border-radius) */
 .flag-dropdown{
   position:absolute;
-  top:60px;
+  top:78px;
   left:0;
-  width:320px;
+  width:340px;
   max-height:320px;
   overflow:auto;
   background:#fff;
@@ -216,25 +215,23 @@ button:hover{ background:#264cc0; }
 <input id="email" type="email" placeholder="Correo electrónico" required>
 </div>
 
-<div class="field">
+<div class="field" id="phoneField">
 <label>Teléfono</label>
 
-<div class="phone-wrapper" id="phoneWrap">
-
+<div class="phone-wrapper">
   <div class="flag-box" id="flagBox" title="Cambiar país">
-    <img id="currentFlag" src="https://flagcdn.com/w40/es.png">
+    <img id="currentFlag" src="https://flagcdn.com/w40/es.png" alt="ES">
   </div>
 
   <div class="prefix" id="prefix">+34</div>
   <input id="telefono" class="phone-input" type="tel" placeholder="654 654 654" required>
+</div>
 
-  <div class="flag-dropdown" id="flagDropdown">
-    <div class="flag-search">
-      <input id="countrySearch" type="text" placeholder="Buscar país o prefijo (+34)">
-    </div>
-    <div id="countriesList"></div>
+<div class="flag-dropdown" id="flagDropdown">
+  <div class="flag-search">
+    <input id="countrySearch" type="text" placeholder="Buscar país o prefijo (+34)">
   </div>
-
+  <div id="countriesList"></div>
 </div>
 
 <div class="hint" id="phoneHint">Introduce un número válido.</div>
@@ -265,27 +262,55 @@ button:hover{ background:#264cc0; }
 const WEBHOOK="https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6";
 
 /* =========================
-   FECHA: BLOQUEO PASADOS + AUTO-UPDATE SIN RECARGAR
+   FECHA: BLOQUEO PASADOS (LOCAL) + REVALIDACIÓN
    ========================= */
-const fecha=document.getElementById("fecha");
+const fecha = document.getElementById("fecha");
+
+function localDateYYYYMMDD(d){
+  // Fecha local (no UTC). Evita bugs de “min” por zona horaria.
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,"0");
+  const dd = String(d.getDate()).padStart(2,"0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function todayLocal(){
+  const t = new Date();
+  t.setHours(0,0,0,0);
+  return t;
+}
 
 function setMinDateToToday(){
-  const t=new Date();
-  t.setHours(0,0,0,0);
-  fecha.min = t.toISOString().split("T")[0];
+  const t = todayLocal();
+  fecha.min = localDateYYYYMMDD(t);
 }
+
+function enforceDateNotPast(){
+  if(!fecha.value) return true;
+  const picked = new Date(fecha.value + "T00:00:00");
+  const t = todayLocal();
+  if(picked < t){
+    fecha.value = localDateYYYYMMDD(t);
+    return false;
+  }
+  return true;
+}
+
 setMinDateToToday();
-// Actualiza cada minuto para que al cambiar el día (00:00) se bloquee sin recargar
 setInterval(setMinDateToToday, 60_000);
 
+fecha.addEventListener("focus", () => { setMinDateToToday(); enforceDateNotPast(); });
+fecha.addEventListener("change", () => { setMinDateToToday(); enforceDateNotPast(); });
+
 /* =========================
-   HORA: 06:00–23:30
+   HORA: 07:00–23:30 (cada 30 min)
    ========================= */
-const hora=document.getElementById("hora");
-for(let h=6;h<24;h++){
+const hora = document.getElementById("hora");
+hora.innerHTML = "";
+for(let h=7; h<24; h++){
   ["00","30"].forEach(m=>{
-    const t=String(h).padStart(2,"0")+":"+m;
-    const opt=document.createElement("option");
+    const t = String(h).padStart(2,"0")+":"+m;
+    const opt = document.createElement("option");
     opt.value=t;
     opt.textContent=t;
     hora.appendChild(opt);
@@ -295,6 +320,7 @@ for(let h=6;h<24;h++){
 /* =========================
    PAÍSES: TODOS + PREFIJO + BANDERA
    ========================= */
+const phoneField = document.getElementById("phoneField");
 const flagBox = document.getElementById("flagBox");
 const dropdown = document.getElementById("flagDropdown");
 const countriesList = document.getElementById("countriesList");
@@ -304,38 +330,16 @@ const prefixEl = document.getElementById("prefix");
 
 let selectedCountry="ES";
 let selectedDial="+34";
-let countries = []; // { iso2, name, dial, flagUrl }
+let countries = [];
 
-/* LÍMITES DUROS POR PAÍS (los más usados/variables, ajustados “como quieres”) */
+/* LÍMITES DUROS (si existe, manda). Si no existe, calculamos por ejemplo. */
 const hardMaxByCountry = {
-  ES: 9,
-  FR: 9,
-  PT: 9,
-  IT: 10,
-  GB: 10,
-  US: 10,
-  CA: 10,
-  MX: 10,
-  AR: 10,
-  BR: 11,
-  CO: 10,
-  CL: 9,
-  PE: 9,
-  DE: 11,     // Alemania suele variar; lo fijamos como pediste (10/11) -> usamos 11
-  NL: 9,
-  BE: 9,
-  CH: 9,
-  SE: 9,
-  NO: 8,
-  DK: 8,
-  FI: 9,
-  IE: 9,
-  PL: 9,
-  CZ: 9,
-  RO: 9,
-  GR: 10,
-  TR: 10,
-  UA: 9
+  ES: 9, FR: 9, PT: 9, IT: 10, GB: 10,
+  US: 10, CA: 10, MX: 10, AR: 10, BR: 11,
+  CO: 10, CL: 9, PE: 9,
+  DE: 11, NL: 9, BE: 9, CH: 9,
+  SE: 9, NO: 8, DK: 8, FI: 9, IE: 9,
+  PL: 9, CZ: 9, RO: 9, GR: 10, TR: 10, UA: 9
 };
 
 function openDropdown(){
@@ -344,9 +348,7 @@ function openDropdown(){
   renderCountries("");
   setTimeout(()=>countrySearch.focus(), 0);
 }
-function closeDropdown(){
-  dropdown.style.display = "none";
-}
+function closeDropdown(){ dropdown.style.display = "none"; }
 
 flagBox.addEventListener("click", (e)=>{
   e.stopPropagation();
@@ -362,7 +364,6 @@ countrySearch.addEventListener("input", (e)=> renderCountries(e.target.value));
 
 async function loadCountries(){
   const res = await fetch("https://restcountries.com/v3.1/all?fields=cca2,name,idd,flags");
-  if(!res.ok) throw new Error("No se pudieron cargar países");
   const data = await res.json();
 
   const list = [];
@@ -374,7 +375,6 @@ async function loadCountries(){
     const suffixes = c.idd?.suffixes || [];
     if(!root || !root.startsWith("+")) continue;
 
-    // UI dial: root o root+primer sufijo (excepto +1)
     let dial = root;
     if(suffixes.length){
       dial = (root === "+1") ? "+1" : (root + suffixes[0]);
@@ -416,11 +416,11 @@ function renderCountries(filterText){
       e.stopPropagation();
       setCountry(c.iso2, c.dial, c.flagUrl);
       closeDropdown();
-      // Al cambiar país, limpiamos input y estado
+
+      // reset input
       telInput.value = "";
-      currentMaxDigits = null;
-      phoneHint.className = "hint";
-      phoneHint.textContent = "Introduce un número válido.";
+      phoneHint.className="hint";
+      phoneHint.textContent = hintTextForMax();
     });
     countriesList.appendChild(row);
   }
@@ -440,76 +440,84 @@ function setCountry(iso2, dial, flagUrl){
   prefixEl.textContent = dial;
   currentFlag.src = flagUrl || `https://flagcdn.com/w40/${selectedCountry.toLowerCase()}.png`;
   currentFlag.alt = selectedCountry;
+
+  // IMPORTANTE: recalcular límite al cambiar país
+  currentMaxDigits = getMaxDigitsForCountry(selectedCountry);
 }
 
+/* Autodetect país por IP (si falla, se queda ES) */
 async function detectCountryByIP(){
   try{
     const res = await fetch("https://ipapi.co/json/");
-    if(!res.ok) throw new Error("ipapi fail");
     const j = await res.json();
     const iso2 = (j.country_code || "").toUpperCase();
-    if(!iso2) throw new Error("no country_code");
+    if(!iso2) return;
     const found = countries.find(c=>c.iso2 === iso2);
     if(found) setCountry(found.iso2, found.dial, found.flagUrl);
-  }catch{
-    // fallback ES
-  }
+  }catch{}
 }
 
 /* =========================
-   TELÉFONO: FORMATEO + VALIDACIÓN + BLOQUEO DURO POR PAÍS
+   TELÉFONO: FORMATEO + VALIDACIÓN + BLOQUEO DURO
    ========================= */
-const telInput=document.getElementById("telefono");
-const phoneHint=document.getElementById("phoneHint");
-
-let currentMaxDigits = null; // máximo dígitos nacionales permitidos para el país actual
+const telInput = document.getElementById("telefono");
+const phoneHint = document.getElementById("phoneHint");
 
 function rawDigits(){
   return telInput.value.replace(/[^\d]/g,"");
 }
 
-function getMaxDigitsForCountry(){
-  // 1) hard override si existe (lo que tú quieres)
-  if(hardMaxByCountry[selectedCountry]) return hardMaxByCountry[selectedCountry];
+function getMaxDigitsForCountry(country){
+  if(hardMaxByCountry[country]) return hardMaxByCountry[country];
 
-  // 2) fallback: intentamos sacar un ejemplo (típico) y usar su longitud
+  // Intento con ejemplo (si la lib lo trae en este bundle)
   try{
-    const ex = libphonenumber.getExampleNumber(selectedCountry);
-    if(ex && ex.nationalNumber){
-      return String(ex.nationalNumber).length;
+    if(typeof libphonenumber.getExampleNumber === "function"){
+      const ex = libphonenumber.getExampleNumber(country);
+      if(ex && ex.nationalNumber){
+        const len = String(ex.nationalNumber).length;
+        if(len >= 4 && len <= 15) return len;
+      }
     }
   }catch{}
 
-  // 3) fallback de seguridad (E.164 máximo nacional suele ser <= 15)
+  // fallback seguro
   return 15;
 }
 
-function applyHardLimit(){
+let currentMaxDigits = getMaxDigitsForCountry(selectedCountry);
+
+function hintTextForMax(){
+  return `Introduce un número válido. Máx: ${currentMaxDigits} dígitos.`;
+}
+
+phoneHint.textContent = hintTextForMax();
+
+function clipToMaxDigits(){
   const digits = rawDigits();
-  if(!digits) return;
-
-  // Si no tenemos max todavía, lo calculamos por país
-  if(!currentMaxDigits) currentMaxDigits = getMaxDigitsForCountry();
-
-  if(digits.length > currentMaxDigits){
-    const clipped = digits.slice(0, currentMaxDigits);
-    const ayt = new libphonenumber.AsYouType(selectedCountry);
-    telInput.value = ayt.input(clipped);
-  }
+  if(digits.length <= currentMaxDigits) return false;
+  const clipped = digits.slice(0, currentMaxDigits);
+  const ayt = new libphonenumber.AsYouType(selectedCountry);
+  telInput.value = ayt.input(clipped);
+  return true;
 }
 
 function formatPhone(){
   const digits = rawDigits();
-  const ayt=new libphonenumber.AsYouType(selectedCountry);
+  const ayt = new libphonenumber.AsYouType(selectedCountry);
   telInput.value = ayt.input(digits);
 }
 
 function validatePhone(showError){
   const digits = rawDigits();
+
   if(!digits){
     if(showError){
       phoneHint.className="hint bad";
       phoneHint.textContent="Introduce un número.";
+    }else{
+      phoneHint.className="hint";
+      phoneHint.textContent = hintTextForMax();
     }
     return null;
   }
@@ -521,10 +529,10 @@ function validatePhone(showError){
     if(!phone || !phone.isValid()){
       if(showError){
         phoneHint.className="hint bad";
-        phoneHint.textContent="Número no válido para el país seleccionado.";
-      } else {
+        phoneHint.textContent=`Número no válido para el país seleccionado. Máx: ${currentMaxDigits} dígitos.`;
+      }else{
         phoneHint.className="hint";
-        phoneHint.textContent="Introduce un número válido.";
+        phoneHint.textContent = hintTextForMax();
       }
       return null;
     }
@@ -535,23 +543,41 @@ function validatePhone(showError){
   }catch{
     if(showError){
       phoneHint.className="hint bad";
-      phoneHint.textContent="Número no válido para el país seleccionado.";
+      phoneHint.textContent=`Número no válido para el país seleccionado. Máx: ${currentMaxDigits} dígitos.`;
     }
     return null;
   }
 }
 
+/* Bloqueo duro (teclado/paste) */
+telInput.addEventListener("beforeinput", (e)=>{
+  // solo controlamos inserciones de texto
+  if(e.inputType !== "insertText" && e.inputType !== "insertFromPaste") return;
+
+  const incoming = (e.data ?? "").replace(/[^\d]/g,"");
+  if(!incoming) return;
+
+  const digits = rawDigits();
+  const selectionStart = telInput.selectionStart ?? telInput.value.length;
+  const selectionEnd = telInput.selectionEnd ?? telInput.value.length;
+
+  // aproximación: calculamos cuánto se reemplaza en dígitos
+  const left = telInput.value.slice(0, selectionStart).replace(/[^\d]/g,"");
+  const right = telInput.value.slice(selectionEnd).replace(/[^\d]/g,"");
+  const nextLen = left.length + incoming.length + right.length;
+
+  if(nextLen > currentMaxDigits){
+    e.preventDefault();
+  }
+});
+
 telInput.addEventListener("input", ()=>{
-  // 1) formateo
   formatPhone();
-  // 2) bloqueo duro por país (no deja pasar del máximo)
-  applyHardLimit();
-  // 3) validación suave (sin molestar)
+  clipToMaxDigits();
   validatePhone(false);
 });
 
 telInput.addEventListener("blur", ()=>{
-  // Validación fuerte al salir
   validatePhone(true);
 });
 
@@ -563,8 +589,8 @@ telInput.addEventListener("blur", ()=>{
   renderCountries("");
   await detectCountryByIP();
 
-  // Set maxDigits para país detectado
-  currentMaxDigits = getMaxDigitsForCountry();
+  currentMaxDigits = getMaxDigitsForCountry(selectedCountry);
+  phoneHint.textContent = hintTextForMax();
 })();
 
 /* =========================
@@ -574,37 +600,42 @@ document.getElementById("form").addEventListener("submit", async (e)=>{
   e.preventDefault();
   status.style.display="none";
 
+  setMinDateToToday();
+  enforceDateNotPast();
+
   const phone = validatePhone(true);
   if(!phone) return;
 
-  // SOLO número nacional (sin +34), en dígitos:
-  const numeroSolo = String(phone.nationalNumber); // <-- esto es lo que irá a Sheets
-
-  const data={
-    nombre:nombre.value.trim(),
-    email:email.value.trim(),
-    telefono:numeroSolo,
-    fecha_solicitada:fecha.value+"T"+hora.value,
-    mensaje:mensaje.value.trim()
+  const numeroSolo = String(phone.nationalNumber); // SOLO NÚMERO (sin +34)
+  const data = {
+    nombre: nombre.value.trim(),
+    email: email.value.trim(),
+    telefono: numeroSolo,
+    fecha_solicitada: fecha.value + "T" + hora.value,
+    mensaje: mensaje.value.trim()
   };
 
   try{
     await fetch(WEBHOOK,{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify(data)
+      body: JSON.stringify(data)
     });
 
     status.className="status ok";
     status.textContent="Cita enviada correctamente.";
     status.style.display="block";
+
     form.reset();
 
-    // Reset del estado teléfono, pero mantenemos país/prefijo
+    // Mantener país/prefijo, reset teléfono/hint
     telInput.value="";
-    currentMaxDigits = getMaxDigitsForCountry();
+    currentMaxDigits = getMaxDigitsForCountry(selectedCountry);
     phoneHint.className="hint";
-    phoneHint.textContent="Introduce un número válido.";
+    phoneHint.textContent = hintTextForMax();
+
+    // Reset mínimo de fecha por si cambió el día
+    setMinDateToToday();
 
   }catch{
     status.className="status err";
