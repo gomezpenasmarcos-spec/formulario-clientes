@@ -44,14 +44,32 @@ textarea {
 
 .phone-wrapper {
     display: flex;
-    gap: 10px;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    padding: 6px;
+    margin-bottom: 18px;
 }
 
 .flag-select {
-    width: 80px;
-    text-align: center;
-    font-size: 20px;
+    border: none;
+    background: transparent;
+    font-size: 22px;
     cursor: pointer;
+    width: 60px;
+}
+
+.prefix {
+    font-size: 16px;
+    margin-right: 6px;
+    font-weight: bold;
+}
+
+.phone-input {
+    border: none;
+    outline: none;
+    flex: 1;
+    font-size: 16px;
 }
 
 button {
@@ -85,13 +103,14 @@ button:hover {
         <label>Teléfono</label>
         <div class="phone-wrapper">
             <select id="country" class="flag-select">
-                <option value="+34">🇪🇸</option>
-                <option value="+33">🇫🇷</option>
-                <option value="+49">🇩🇪</option>
-                <option value="+39">🇮🇹</option>
-                <option value="+44">🇬🇧</option>
+                <option value="+34" data-prefix="+34">🇪🇸</option>
+                <option value="+33" data-prefix="+33">🇫🇷</option>
+                <option value="+49" data-prefix="+49">🇩🇪</option>
+                <option value="+39" data-prefix="+39">🇮🇹</option>
+                <option value="+44" data-prefix="+44">🇬🇧</option>
             </select>
-            <input type="text" id="telefono" placeholder="654 654 654" required>
+            <span class="prefix" id="prefix">+34</span>
+            <input type="text" id="telefono" class="phone-input" placeholder="654 654 654" required>
         </div>
 
         <label>Selecciona el día</label>
@@ -115,7 +134,7 @@ const today = new Date();
 today.setHours(0,0,0,0);
 document.getElementById("fecha").min = today.toISOString().split("T")[0];
 
-// 🔒 HORAS DE 06:00 A 23:30 (bloques de 30 min)
+// 🔒 HORAS DE 06:00 A 23:30
 const horaSelect = document.getElementById("hora");
 for (let h = 6; h < 24; h++) {
     ["00","30"].forEach(min => {
@@ -126,6 +145,14 @@ for (let h = 6; h < 24; h++) {
         horaSelect.appendChild(option);
     });
 }
+
+// 🔒 CAMBIO AUTOMÁTICO DE PREFIJO SEGÚN BANDERA
+const countrySelect = document.getElementById("country");
+const prefixSpan = document.getElementById("prefix");
+
+countrySelect.addEventListener("change", function(){
+    prefixSpan.textContent = this.value;
+});
 
 // 🔒 FORMATO AUTOMÁTICO DEL TELÉFONO
 document.getElementById("telefono").addEventListener("input", function(e){
