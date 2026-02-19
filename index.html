@@ -27,13 +27,17 @@ body{
 h2{
   text-align:center;
   font-size:32px;
-  margin-bottom:28px;
+  margin-bottom:30px;
+}
+
+.field{
+  margin-bottom:20px;
 }
 
 label{
   display:block;
-  margin:12px 0 6px;
-  font-size:17px;
+  font-size:16px;
+  margin-bottom:6px;
 }
 
 input, textarea, select{
@@ -53,8 +57,8 @@ textarea{ resize:none; }
   border:1px solid #ccc;
   border-radius:12px;
   height:54px;
-  overflow:hidden;
   background:#fff;
+  overflow:hidden;
 }
 
 .flag-box{
@@ -74,9 +78,9 @@ textarea{ resize:none; }
 }
 
 .prefix{
-  padding:0 8px;
   display:flex;
   align-items:center;
+  padding:0 8px;
   font-size:18px;
   color:#444;
 }
@@ -93,8 +97,8 @@ textarea{ resize:none; }
   position:absolute;
   top:54px;
   left:0;
-  width:220px;
-  max-height:250px;
+  width:240px;
+  max-height:260px;
   overflow-y:auto;
   background:#fff;
   box-shadow:0 8px 20px rgba(0,0,0,.15);
@@ -124,7 +128,7 @@ button{
   color:#fff;
   font-size:22px;
   cursor:pointer;
-  margin-top:18px;
+  margin-top:10px;
 }
 button:hover{ background:#264cc0; }
 </style>
@@ -137,11 +141,18 @@ button:hover{ background:#264cc0; }
 
 <form id="form">
 
-<input id="nombre" type="text" placeholder="Nombre completo" required>
-<input id="email" type="email" placeholder="Correo electrónico" required>
+<div class="field">
+<label>Nombre</label>
+<input id="nombre" type="text" required>
+</div>
 
+<div class="field">
+<label>Correo electrónico</label>
+<input id="email" type="email" required>
+</div>
+
+<div class="field">
 <label>Teléfono</label>
-
 <div class="phone-wrapper">
 
 <div class="flag-box" id="flagBox">
@@ -151,18 +162,25 @@ button:hover{ background:#264cc0; }
 
 <div class="prefix" id="prefix">+34</div>
 
-<input id="telefono" class="phone-input" type="text" placeholder="654 654 654" required>
+<input id="telefono" class="phone-input" type="text" required>
 
 </div>
+</div>
 
+<div class="field">
 <label>Selecciona el día</label>
 <input id="fecha" type="date" required>
+</div>
 
+<div class="field">
 <label>Selecciona la hora</label>
 <select id="hora" required></select>
+</div>
 
+<div class="field">
 <label>Motivo</label>
-<textarea id="mensaje" rows="3" placeholder="Escribe el motivo de la cita" required></textarea>
+<textarea id="mensaje" rows="3" required></textarea>
+</div>
 
 <button type="submit">Reservar</button>
 
@@ -200,6 +218,7 @@ const countries = [
 ];
 
 const dropdown=document.getElementById("flagDropdown");
+
 countries.forEach(c=>{
   const div=document.createElement("div");
   div.className="flag-option";
@@ -213,12 +232,14 @@ countries.forEach(c=>{
 });
 
 const flagBox=document.getElementById("flagBox");
-flagBox.onclick=()=>{
-  dropdown.style.display = dropdown.style.display==="block"?"none":"block";
-};
 
-document.addEventListener("click",(e)=>{
-  if(!flagBox.contains(e.target)) dropdown.style.display="none";
+flagBox.addEventListener("click",(e)=>{
+  e.stopPropagation();
+  dropdown.style.display = dropdown.style.display==="block"?"none":"block";
+});
+
+document.addEventListener("click",()=>{
+  dropdown.style.display="none";
 });
 
 // ===== FORMATO TELÉFONO =====
@@ -270,6 +291,7 @@ document.getElementById("form").addEventListener("submit",async(e)=>{
   alert("Cita enviada correctamente");
   form.reset();
 });
+
 </script>
 
 </body>
