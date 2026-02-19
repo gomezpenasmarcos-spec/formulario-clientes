@@ -1,129 +1,155 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Formulario de Clientes</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+<meta charset="UTF-8">
+<title>Reserva de Cita</title>
 
-    .form-container {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      width: 400px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+.container {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  width: 420px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
 
-    input, textarea, button {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
 
-    button {
-      background: #2563eb;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
+input, select, textarea, button {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
 
-    button:hover {
-      background: #1e4fd8;
-    }
+button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
 
-    .success {
-      color: green;
-      text-align: center;
-      margin-top: 10px;
-    }
-  </style>
+button:hover {
+  background: #1e4fd8;
+}
+</style>
 </head>
 
 <body>
 
-<div class="form-container">
-  <h2>Formulario de Clientes</h2>
+<div class="container">
+  <h2>Reserva tu cita</h2>
 
   <form id="formulario">
+
     <input type="text" name="nombre" placeholder="Nombre completo" required>
 
     <input type="email" name="email" placeholder="Correo electrónico" required>
 
     <input type="tel" name="telefono" placeholder="Teléfono" required>
 
-    <input 
-      type="datetime-local" 
-      name="fecha_solicitada" 
-      id="fecha_solicitada"
-      required
-      step="1800"
-    >
+    <!-- FECHA -->
+    <label>Selecciona el día</label>
+    <input type="date" id="fecha" required>
+
+    <!-- HORA -->
+    <label>Selecciona la hora</label>
+    <select id="hora" required></select>
 
     <textarea name="mensaje" placeholder="Mensaje" required></textarea>
 
-    <button type="submit">Enviar</button>
+    <button type="submit">Reservar</button>
 
-    <div class="success" id="mensajeExito"></div>
   </form>
 </div>
 
 <script>
-  const fechaInput = document.getElementById("fecha_solicitada");
+/* =========================
+   1️⃣ BLOQUEAR DÍAS PASADOS
+========================= */
 
-  function configurarFecha() {
-    const ahora = new Date();
+const fechaInput = document.getElementById("fecha");
+const hoy = new Date();
+hoy.setHours(0,0,0,0);
+fechaInput.min = hoy.toISOString().split("T")[0];
 
-    // Bloqueamos fechas pasadas
-    ahora.setSeconds(0);
-    ahora.setMilliseconds(0);
 
-    const iso = ahora.toISOString().slice(0,16);
-    fechaInput.min = iso;
-  }
+/* =========================
+   2️⃣ GENERAR HORAS VÁLIDAS
+   06:00 → 23:30
+   Saltos de 30 minutos
+========================= */
 
-  configurarFecha();
+const horaSelect = document.getElementById("hora");
 
-  // Bloqueo horario 06:00 - 00:00
-  fechaInput.addEventListener("change", function() {
-    const fechaSeleccionada = new Date(this.value);
-    const hora = fechaSeleccionada.getHours();
+function generarHoras() {
+  horaSelect.innerHTML = "";
 
-    if (hora < 6 || hora > 23) {
-      alert("Solo se puede reservar entre las 06:00 y las 00:00");
-      this.value = "";
+  for (let h = 6; h <= 23; h++) {
+    for (let m of [0, 30]) {
+
+      if (h === 23 && m === 30) {
+        // Permitimos 23:30 (termina a las 00:00)
+      }
+
+      const hora = String(h).padStart(2, "0");
+      const minuto = String(m).padStart(2, "0");
+
+      const option = document.createElement("option");
+      option.value = `${hora}:${minuto}`;
+      option.textContent = `${hora}:${minuto}`;
+
+      horaSelect.appendChild(option);
     }
+  }
+}
+
+generarHoras();
+
+
+/* =========================
+   3️⃣ ENVÍO AL WEBHOOK
+========================= */
+
+document.getElementById("formulario").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const fecha = fechaInput.value;
+  const hora = horaSelect.value;
+
+  const fecha_solicitada = `${fecha}T${hora}`;
+
+  const datos = {
+    nombre: this.nombre.value,
+    email: this.email.value,
+    telefono: this.telefono.value,
+    mensaje: this.mensaje.value,
+    fecha_solicitada: fecha_solicitada
+  };
+
+  await fetch("https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(datos)
   });
 
-  document.getElementById("formulario").addEventListener("submit", async function(e) {
-    e.preventDefault();
-
-    const datos = Object.fromEntries(new FormData(this));
-
-    await fetch("https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(datos)
-    });
-
-    document.getElementById("mensajeExito").innerText = "Formulario enviado correctamente";
-    this.reset();
-    configurarFecha();
-  });
+  alert("Reserva enviada correctamente");
+  this.reset();
+});
 </script>
 
 </body>
