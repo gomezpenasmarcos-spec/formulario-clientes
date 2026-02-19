@@ -1,195 +1,219 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Reserva tu cita</title>
 
 <style>
-body {
+  body{
     font-family: Arial, sans-serif;
-    background: #f3f3f3;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
+    background:#f3f3f3;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+    margin:0;
+  }
 
-.container {
-    background: white;
-    padding: 40px;
-    border-radius: 20px;
-    width: 420px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-}
+  .container{
+    background:#fff;
+    padding:40px;
+    border-radius:20px;
+    width:420px;
+    box-shadow:0 10px 30px rgba(0,0,0,.10);
+  }
 
-h2 {
-    text-align: center;
-    margin-bottom: 30px;
-}
+  h2{
+    text-align:center;
+    margin:0 0 28px 0;
+    font-size:34px;
+  }
 
-input, select, textarea {
-    width: 100%;
-    padding: 14px;
-    margin-bottom: 18px;
-    border-radius: 12px;
-    border: 1px solid #ccc;
-    font-size: 16px;
-    box-sizing: border-box;
-}
+  label{
+    display:block;
+    font-size:18px;
+    margin:8px 0 8px;
+  }
 
-textarea {
-    resize: none;
-}
+  input, select, textarea{
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    border:1px solid #cfcfcf;
+    font-size:18px;
+    box-sizing:border-box;
+    outline:none;
+  }
 
-.phone-wrapper {
-    display: flex;
-    align-items: center;
-    border: 1px solid #ccc;
-    border-radius: 12px;
-    padding: 6px 10px;
-    margin-bottom: 18px;
-}
+  textarea{ resize:none; }
 
-.flag-select {
-    border: none;
-    background: transparent;
-    font-size: 22px;
-    cursor: pointer;
-    width: 55px;
-}
+  /* === TELEFONO PROFESIONAL (bandera + prefijo alineado) === */
+  .phone-group{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:18px;
+  }
 
-.flag-select option {
-    font-size: 18px;
-}
+  /* selector bandera compacto */
+  .flag-select{
+    width:74px;
+    height:54px;
+    font-size:26px;
+    border-radius:12px;
+    border:1px solid #cfcfcf;
+    background:#fff;
+    padding:0 10px;
+    cursor:pointer;
+  }
 
-.prefix {
-    font-size: 16px;
-    margin: 0 6px;
-    color: #333;
-}
+  /* contenedor del prefijo + input como un solo campo */
+  .phone-field{
+    flex:1;
+    display:flex;
+    align-items:center;
+    height:54px;
+    border:1px solid #cfcfcf;
+    border-radius:12px;
+    padding:0 14px;
+    background:#fff;
+    box-sizing:border-box;
+  }
 
-.phone-input {
-    border: none;
-    outline: none;
-    flex: 1;
-    font-size: 16px;
-}
+  .prefix{
+    font-size:18px;
+    color:#222;
+    margin-right:10px;
+    white-space:nowrap;
+    line-height:1;
+    position:relative;
+    top:0; /* por si el navegador mete baseline rara */
+  }
 
-button {
-    width: 100%;
-    padding: 15px;
-    border-radius: 14px;
-    border: none;
-    background: #3b5ccc;
-    color: white;
-    font-size: 18px;
-    cursor: pointer;
-}
+  .phone-input{
+    border:none;
+    padding:0;
+    margin:0;
+    height:100%;
+    flex:1;
+    font-size:18px;
+    outline:none;
+  }
+  .phone-input::placeholder{ color:#9b9b9b; }
 
-button:hover {
-    background: #2f4bb3;
-}
+  button{
+    width:100%;
+    padding:16px;
+    border-radius:14px;
+    border:none;
+    background:#2f5bd7;
+    color:#fff;
+    font-size:22px;
+    cursor:pointer;
+    margin-top:10px;
+  }
+  button:hover{ background:#264cc0; }
 </style>
 </head>
 
 <body>
-
-<div class="container">
+  <div class="container">
     <h2>Reserva tu cita</h2>
 
     <form id="form">
+      <input id="nombre" type="text" placeholder="Nombre completo" required />
+      <input id="email" type="email" placeholder="Correo electrónico" required />
 
-        <input type="text" id="nombre" placeholder="Nombre completo" required>
+      <label>Teléfono</label>
+      <div class="phone-group">
+        <!-- Solo banderas, el valor es el prefijo -->
+        <select id="country" class="flag-select" aria-label="País" required>
+          <option value="+34">🇪🇸</option>
+          <option value="+33">🇫🇷</option>
+          <option value="+49">🇩🇪</option>
+          <option value="+39">🇮🇹</option>
+          <option value="+44">🇬🇧</option>
+        </select>
 
-        <input type="email" id="email" placeholder="Correo electrónico" required>
-
-        <label>Teléfono</label>
-        <div class="phone-wrapper">
-            <select id="country" class="flag-select">
-                <option value="+34">🇪🇸</option>
-                <option value="+33">🇫🇷</option>
-                <option value="+49">🇩🇪</option>
-                <option value="+39">🇮🇹</option>
-                <option value="+44">🇬🇧</option>
-            </select>
-            <span class="prefix" id="prefix">+34</span>
-            <input type="text" id="telefono" class="phone-input" placeholder="654 654 654" required>
+        <div class="phone-field">
+          <span id="prefix" class="prefix">+34</span>
+          <input id="telefono" class="phone-input" type="text" inputmode="numeric" placeholder="654 654 654" required />
         </div>
+      </div>
 
-        <label>Selecciona el día</label>
-        <input type="date" id="fecha" required>
+      <label>Selecciona el día</label>
+      <input id="fecha" type="date" required />
 
-        <label>Selecciona la hora</label>
-        <select id="hora" required></select>
+      <label>Selecciona la hora</label>
+      <select id="hora" required></select>
 
-        <label>Motivo</label>
-        <textarea id="mensaje" rows="3" placeholder="Escribe el motivo de la cita" required></textarea>
+      <label>Motivo</label>
+      <textarea id="mensaje" rows="3" placeholder="Escribe el motivo de la cita" required></textarea>
 
-        <button type="submit">Reservar</button>
-
+      <button type="submit">Reservar</button>
     </form>
-</div>
+  </div>
 
 <script>
+  // Bloquear días anteriores
+  const fechaInput = document.getElementById("fecha");
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  fechaInput.min = today.toISOString().split("T")[0];
 
-// 🔒 SOLO FECHAS FUTURAS
-const today = new Date();
-today.setHours(0,0,0,0);
-document.getElementById("fecha").min = today.toISOString().split("T")[0];
+  // Horas: 06:00 - 23:30 (cada 30 mins)
+  const horaSelect = document.getElementById("hora");
+  for (let h = 6; h < 24; h++) {
+    for (const m of ["00","30"]) {
+      const t = String(h).padStart(2,"0") + ":" + m;
+      const opt = document.createElement("option");
+      opt.value = t;
+      opt.textContent = t;
+      horaSelect.appendChild(opt);
+    }
+  }
 
-// 🔒 HORAS DE 06:00 A 23:30
-const horaSelect = document.getElementById("hora");
-for (let h = 6; h < 24; h++) {
-    ["00","30"].forEach(min => {
-        const time = String(h).padStart(2,"0")+":"+min;
-        const option = document.createElement("option");
-        option.value = time;
-        option.textContent = time;
-        horaSelect.appendChild(option);
-    });
-}
+  // Prefijo según bandera
+  const country = document.getElementById("country");
+  const prefix = document.getElementById("prefix");
+  country.addEventListener("change", () => {
+    prefix.textContent = country.value;
+  });
 
-// 🔒 CAMBIO AUTOMÁTICO DE PREFIJO
-const countrySelect = document.getElementById("country");
-const prefixSpan = document.getElementById("prefix");
+  // Formato teléfono en grupos de 3 mientras escribe
+  const telInput = document.getElementById("telefono");
+  telInput.addEventListener("input", (e) => {
+    const digits = e.target.value.replace(/\D/g, "");
+    const grouped = digits.replace(/(\d{3})(?=\d)/g, "$1 ").trim();
+    e.target.value = grouped;
+  });
 
-countrySelect.addEventListener("change", function(){
-    prefixSpan.textContent = this.value;
-});
-
-// 🔒 FORMATO AUTOMÁTICO DEL TELÉFONO
-document.getElementById("telefono").addEventListener("input", function(e){
-    let value = e.target.value.replace(/\D/g,'');
-    value = value.replace(/(\d{3})(?=\d)/g, '$1 ');
-    e.target.value = value.trim();
-});
-
-// 🚀 ENVÍO A PRODUCCIÓN
-document.getElementById("form").addEventListener("submit", async function(e){
+  // Submit a PRODUCCIÓN
+  document.getElementById("form").addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const countryCode = document.getElementById("country").value;
-    const telefono = document.getElementById("telefono").value.replace(/\s/g,'');
+    const countryCode = country.value; // "+34"
+    const telefono = telInput.value.replace(/\s/g, ""); // sin espacios
 
     const data = {
-        nombre: document.getElementById("nombre").value,
-        email: document.getElementById("email").value,
-        telefono: countryCode + telefono,
-        fecha_solicitada: document.getElementById("fecha").value + "T" + document.getElementById("hora").value,
-        mensaje: document.getElementById("mensaje").value
+      nombre: document.getElementById("nombre").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      telefono: countryCode + telefono,
+      fecha_solicitada: document.getElementById("fecha").value + "T" + document.getElementById("hora").value,
+      mensaje: document.getElementById("mensaje").value.trim()
     };
 
     await fetch("https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
     });
 
     alert("Cita enviada correctamente");
-    document.getElementById("form").reset();
-});
+    e.target.reset();
+    prefix.textContent = country.value; // vuelve a mostrar el prefijo correcto
+  });
 </script>
-
 </body>
 </html>
