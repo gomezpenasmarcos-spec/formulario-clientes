@@ -308,18 +308,96 @@ fecha.addEventListener("change", () => { setMinDateToToday(); enforceDateNotPast
 
 /* =========================
    HORA: 07:00–23:30 (cada 30 min)
+   + HOY: eliminar horas ya pasadas (dinámico, refresca solo)
    ========================= */
 const hora = document.getElementById("hora");
-hora.innerHTML = "";
-for(let h=7; h<24; h++){
-  ["00","30"].forEach(m=>{
-    const t = String(h).padStart(2,"0")+":"+m;
-    const opt = document.createElement("option");
-    opt.value=t;
-    opt.textContent=t;
-    hora.appendChild(opt);
-  });
+
+function buildAllSlots(){
+  const slots = [];
+  for(let h=7; h<24; h++){
+    ["00","30"].forEach(m=>{
+      slots.push(`${String(h).padStart(2,"0")}:${m}`);
+    });
+  }
+  return slots;
 }
+
+const ALL_SLOTS = buildAllSlots();
+
+function minutesSinceMidnight(d){
+  return d.getHours()*60 + d.getMinutes();
+}
+
+function slotToMinutes(slotHHMM){
+  const [hh, mm] = slotHHMM.split(":").map(Number);
+  return hh*60 + mm;
+}
+
+function nextAllowedMinute(now, step){
+  // step=30 => redondea hacia arriba al siguiente múltiplo de 30
+  const m = minutesSinceMidnight(now);
+  const mod = m % step;
+  return mod === 0 ? m : (m + (step - mod));
+}
+
+function renderHours(){
+  hora.innerHTML = "";
+
+  // si aún no eligió fecha, no pintamos nada raro (pero dejamos slots completos)
+  const selected = fecha.value;
+  const today = localDateYYYYMMDD(new Date());
+
+  const isToday = selected && selected === today;
+
+  let minMinuteAllowed = null;
+
+  if(isToday){
+    const now = new Date();
+
+    // Si ahora son 20:16 => siguiente slot permitido = 20:30
+    // Si ahora son 20:30 exacto => siguiente slot permitido = 20:30 (permitido)
+    minMinuteAllowed = nextAllowedMinute(now, 30);
+  }
+
+  // Pintar slots
+  for(const slot of ALL_SLOTS){
+    if(isToday){
+      const slotMin = slotToMinutes(slot);
+      if(slotMin < minMinuteAllowed) continue; // elimina horas anteriores
+    }
+    const opt = document.createElement("option");
+    opt.value = slot;
+    opt.textContent = slot;
+    hora.appendChild(opt);
+  }
+
+  // Si hoy ya no quedan horas (p.ej. 23:40)
+  if(isToday && hora.options.length === 0){
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "No quedan horas disponibles hoy";
+    opt.disabled = true;
+    opt.selected = true;
+    hora.appendChild(opt);
+  }
+}
+
+// Render inicial
+renderHours();
+
+// Al cambiar fecha => recalcular
+fecha.addEventListener("change", () => {
+  // Asegura min date y no pasado, y luego horas
+  setMinDateToToday();
+  enforceDateNotPast();
+  renderHours();
+});
+
+// Refresco automático cada 30s (para que a las 20:30 “desaparezca” 20:00 sin recargar)
+setInterval(() => {
+  // Si está en hoy, refresca horas
+  renderHours();
+}, 30_000);
 
 /* =========================
    PAÍSES: TODOS + PREFIJO + BANDERA
@@ -415,6 +493,9 @@ function renderCountries(filterText){
       telInput.value = "";
       phoneHint.className="hint";
       phoneHint.textContent = hintTextForMax();
+
+      // placeholder dinámico recalculado
+      setDynamicPlaceholder(selectedCountry);
     });
     countriesList.appendChild(row);
   }
@@ -438,7 +519,7 @@ function setCountry(iso2, dial, flagUrl){
   // recalcular límite al cambiar país
   currentMaxDigits = getMaxDigitsForCountry(selectedCountry);
 
-  // placeholder dinámico por país (nuevo)
+  // placeholder dinámico por país
   setDynamicPlaceholder(selectedCountry);
 }
 
@@ -456,7 +537,7 @@ async function detectCountryByIP(){
 
 /* =========================
    TELÉFONO: FORMATEO + VALIDACIÓN + BLOQUEO DURO (POR PAÍS)
-   + PLACEHOLDER DINÁMICO POR PAÍS (NUEVO)
+   + PLACEHOLDER DINÁMICO POR PAÍS
    ========================= */
 const telInput = document.getElementById("telefono");
 const phoneHint = document.getElementById("phoneHint");
@@ -501,9 +582,8 @@ function hintTextForMax(){
 }
 phoneHint.textContent = hintTextForMax();
 
-/* ===== NUEVO: placeholder dinámico por país ===== */
+/* placeholder dinámico por país */
 function makeFallbackPlaceholderByMax(maxDigits){
-  // genera algo tipo: 123 456 789 012...
   const len = Math.min(Math.max(maxDigits, 6), 15);
   let digits = "";
   for(let i=1;i<=len;i++){
@@ -513,7 +593,6 @@ function makeFallbackPlaceholderByMax(maxDigits){
 }
 
 function setDynamicPlaceholder(country){
-  // Si hay ejemplo real del país, lo formateamos y lo ponemos como placeholder
   try{
     if(typeof libphonenumber.getExampleNumber === "function"){
       const ex = libphonenumber.getExampleNumber(country);
@@ -528,11 +607,9 @@ function setDynamicPlaceholder(country){
     }
   }catch{}
 
-  // fallback: placeholder genérico en función del max del país
   const max = getMaxDigitsForCountry(country);
   telInput.placeholder = makeFallbackPlaceholderByMax(max);
 }
-/* ===== FIN NUEVO ===== */
 
 function formatPhone(){
   const digits = rawDigits();
@@ -595,11 +672,9 @@ function validatePhone(showError){
 telInput.addEventListener("beforeinput", (e)=>{
   if(e.inputType !== "insertText" && e.inputType !== "insertFromPaste") return;
 
-  // Para paste, e.data puede ser null: lo dejamos pasar y recortamos en input.
   const incoming = (e.data ?? "").replace(/[^\d]/g,"");
   if(!incoming && e.inputType === "insertText") return;
 
-  // Si hay selección, permitimos reemplazar
   const selStart = telInput.selectionStart ?? telInput.value.length;
   const selEnd = telInput.selectionEnd ?? telInput.value.length;
 
@@ -633,8 +708,10 @@ telInput.addEventListener("blur", ()=>{
   currentMaxDigits = getMaxDigitsForCountry(selectedCountry);
   phoneHint.textContent = hintTextForMax();
 
-  // placeholder dinámico inicial (nuevo)
   setDynamicPlaceholder(selectedCountry);
+
+  // asegurar horas iniciales correctas si ya viene con fecha por defecto del browser
+  renderHours();
 })();
 
 /* =========================
@@ -650,8 +727,6 @@ form.addEventListener("submit", async (e)=>{
   const phone = validatePhone(true);
   if(!phone) return;
 
-  // SE GUARDA SOLO EL NÚMERO NACIONAL, PERO CON ESPACIOS (como se ve en el input)
-  // (sin +34, sin +XX)
   const telefonoConEspacios = telInput.value.trim();
 
   const data = {
@@ -677,16 +752,15 @@ form.addEventListener("submit", async (e)=>{
 
     form.reset();
 
-    // Mantener país/prefijo, reset teléfono/hint
+    // Mantener país/prefijo, reset teléfono/hint/placeholder
     telInput.value="";
     currentMaxDigits = getMaxDigitsForCountry(selectedCountry);
     phoneHint.className="hint";
     phoneHint.textContent = hintTextForMax();
-
-    // placeholder vuelve al del país seleccionado (nuevo)
     setDynamicPlaceholder(selectedCountry);
 
     setMinDateToToday();
+    renderHours();
   }catch{
     status.className="status err";
     status.textContent="Error al enviar la cita.";
