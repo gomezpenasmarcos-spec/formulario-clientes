@@ -1,15 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Reserva tu cita</title>
-
-<script src="https://unpkg.com/libphonenumber-js@1.10.25/bundle/libphonenumber-js.min.js"></script>
 
 <style>
 body{
-  font-family:Arial,sans-serif;
+  font-family: Arial, sans-serif;
   background:#f3f3f3;
   display:flex;
   justify-content:center;
@@ -17,6 +15,7 @@ body{
   min-height:100vh;
   margin:0;
 }
+
 .container{
   background:#fff;
   padding:40px;
@@ -24,17 +23,22 @@ body{
   width:420px;
   box-shadow:0 10px 30px rgba(0,0,0,.10);
 }
+
 h2{
   text-align:center;
   font-size:32px;
-  margin-bottom:28px;
+  margin-bottom:30px;
 }
+
+.field{ margin-bottom:22px; }
+
 label{
   display:block;
-  margin:16px 0 6px;
-  font-size:17px;
+  font-size:16px;
+  margin-bottom:6px;
 }
-input,textarea,select{
+
+input, textarea, select{
   width:100%;
   padding:14px;
   border-radius:12px;
@@ -42,41 +46,125 @@ input,textarea,select{
   font-size:18px;
   box-sizing:border-box;
   outline:none;
+  background:#fff;
 }
-textarea{resize:none;}
 
-.phone-group{
+textarea{ resize:none; }
+
+/* TELÉFONO */
+.phone-wrapper{
   display:flex;
-  align-items:center;
   border:1px solid #ccc;
   border-radius:12px;
-  overflow:hidden;
   height:54px;
+  background:#fff;
+  overflow:visible; /* importante para que el dropdown no se corte */
+  position:relative;
 }
-.flag-select{
+
+.flag-box{
   width:70px;
-  border:none;
-  outline:none;
-  cursor:pointer;
-  font-size:20px;
-  text-align:center;
-}
-.phone-wrapper{
-  flex:1;
   display:flex;
   align-items:center;
-  padding:0 12px;
+  justify-content:center;
+  border-right:1px solid #ddd;
+  cursor:pointer;
+  position:relative;
+  user-select:none;
+  background:#fff;
+  flex:0 0 70px;
 }
+
+.flag-box img{
+  width:28px;
+  height:20px;
+  border-radius:3px;
+  object-fit:cover;
+}
+
 .prefix{
-  margin-right:6px;
-  color:#555;
+  display:flex;
+  align-items:center;
+  padding:0 10px;
+  font-size:18px;
+  color:#444;
+  white-space:nowrap;
 }
+
 .phone-input{
+  flex:1;
   border:none;
   outline:none;
-  flex:1;
   font-size:18px;
+  padding:14px 14px 14px 6px;
+  min-width:0;
 }
+
+.flag-dropdown{
+  position:absolute;
+  top:60px;
+  left:0;
+  width:320px;
+  max-height:320px;
+  overflow:auto;
+  background:#fff;
+  border-radius:12px;
+  box-shadow:0 12px 30px rgba(0,0,0,.25);
+  display:none;
+  z-index:999999;
+  border:1px solid #eee;
+}
+
+.flag-search{
+  position:sticky;
+  top:0;
+  background:#fff;
+  padding:10px;
+  border-bottom:1px solid #eee;
+}
+
+.flag-search input{
+  width:100%;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  font-size:16px;
+  outline:none;
+}
+
+.flag-option{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  cursor:pointer;
+}
+
+.flag-option:hover{ background:#f3f5f9; }
+
+.flag-option img{
+  width:26px;
+  height:18px;
+  border-radius:3px;
+  object-fit:cover;
+}
+
+.country-name{
+  flex:1;
+  font-size:14px;
+  color:#333;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.dial{
+  font-size:14px;
+  font-weight:600;
+  color:#111;
+  white-space:nowrap;
+}
+
 button{
   width:100%;
   padding:16px;
@@ -86,181 +174,115 @@ button{
   color:#fff;
   font-size:22px;
   cursor:pointer;
-  margin-top:18px;
 }
-button:hover{background:#264cc0;}
 
-.success-message{
-  margin-top:15px;
-  padding:12px;
-  border-radius:10px;
-  background:#e6f4ea;
-  color:#1b5e20;
+button:hover{ background:#264cc0; }
+
+.status{
+  margin-top:12px;
+  font-size:16px;
   display:none;
-  text-align:center;
 }
 
-.error-message{
-  color:red;
-  font-size:14px;
+.status.ok{ color:#15803d; display:block; }
+.status.err{ color:#b91c1c; display:block; }
+
+.hint{
   margin-top:6px;
+  font-size:13px;
+  color:#6b7280;
 }
+.hint.bad{ color:#b91c1c; }
+.hint.good{ color:#15803d; }
 </style>
+
+<script src="https://unpkg.com/libphonenumber-js@1.11.7/bundle/libphonenumber-js.min.js"></script>
 </head>
 
 <body>
+
 <div class="container">
 <h2>Reserva tu cita</h2>
 
 <form id="form">
 
+<div class="field">
 <label>Nombre</label>
 <input id="nombre" type="text" placeholder="Nombre completo" required>
+</div>
 
+<div class="field">
 <label>Correo electrónico</label>
 <input id="email" type="email" placeholder="Correo electrónico" required>
+</div>
 
+<div class="field">
 <label>Teléfono</label>
-<div class="phone-group">
-<select id="countrySelect" class="flag-select"></select>
-<div class="phone-wrapper">
-<span id="prefix" class="prefix">+34</span>
-<input id="telefono" class="phone-input" type="text" placeholder="654 654 654" required>
-</div>
-</div>
-<div id="phoneError" class="error-message"></div>
 
+<div class="phone-wrapper" id="phoneWrap">
+
+  <div class="flag-box" id="flagBox" title="Cambiar país">
+    <img id="currentFlag" src="https://flagcdn.com/w40/es.png">
+  </div>
+
+  <div class="prefix" id="prefix">+34</div>
+  <input id="telefono" class="phone-input" type="tel" placeholder="654 654 654" required>
+
+  <div class="flag-dropdown" id="flagDropdown">
+    <div class="flag-search">
+      <input id="countrySearch" type="text" placeholder="Buscar país o prefijo (+34)">
+    </div>
+    <div id="countriesList"></div>
+  </div>
+
+</div>
+
+<div class="hint" id="phoneHint">Introduce un número válido.</div>
+</div>
+
+<div class="field">
 <label>Selecciona el día</label>
 <input id="fecha" type="date" required>
+</div>
 
+<div class="field">
 <label>Selecciona la hora</label>
 <select id="hora" required></select>
+</div>
 
+<div class="field">
 <label>Motivo</label>
 <textarea id="mensaje" rows="3" placeholder="Escribe el motivo de la cita" required></textarea>
-
-<button type="submit">Reservar</button>
-
-<div id="successMessage" class="success-message">
-Cita enviada correctamente.
 </div>
+
+<button type="submit" id="submitBtn">Reservar</button>
+<div id="status" class="status"></div>
 
 </form>
 </div>
 
 <script>
-const telInput = document.getElementById("telefono");
-const countrySelect = document.getElementById("countrySelect");
-const prefix = document.getElementById("prefix");
-const phoneError = document.getElementById("phoneError");
+const WEBHOOK="https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6";
 
-let selectedCountry = "ES";
-let selectedDial = "+34";
-let currentMaxDigits = null;
+/* =========================
+   FECHA: BLOQUEO PASADOS + AUTO-UPDATE SIN RECARGAR
+   ========================= */
+const fecha=document.getElementById("fecha");
 
-/* ===== LISTA COMPLETA DE PAÍSES ===== */
-Object.entries(libphonenumber.getCountries()).forEach(code=>{
-  const option=document.createElement("option");
-  option.value=code[0];
-  option.textContent=code[0];
-  countrySelect.appendChild(option);
-});
-
-countrySelect.value="ES";
-
-/* ===== AUTODETECTAR PAÍS POR IP ===== */
-fetch("https://ipapi.co/json/")
-.then(res=>res.json())
-.then(data=>{
-  if(data.country_code){
-    countrySelect.value=data.country_code;
-    updateCountry();
-  }
-}).catch(()=>{});
-
-/* ===== ACTUALIZAR PREFIJO ===== */
-function updateCountry(){
-  selectedCountry = countrySelect.value;
-  const example = libphonenumber.getExampleNumber(selectedCountry);
-  if(example){
-    selectedDial = "+" + example.countryCallingCode;
-    prefix.textContent = selectedDial;
-  }
-  telInput.value="";
-  phoneError.textContent="";
-  currentMaxDigits=null;
+function setMinDateToToday(){
+  const t=new Date();
+  t.setHours(0,0,0,0);
+  fecha.min = t.toISOString().split("T")[0];
 }
+setMinDateToToday();
+// Actualiza cada minuto para que al cambiar el día (00:00) se bloquee sin recargar
+setInterval(setMinDateToToday, 60_000);
 
-countrySelect.addEventListener("change",updateCountry);
-updateCountry();
-
-/* ===== FORMATO EN VIVO ===== */
-function rawDigits(){
-  return telInput.value.replace(/\D/g,"");
-}
-
-function formatAsYouType(){
-  const ayt = new libphonenumber.AsYouType(selectedCountry);
-  telInput.value = ayt.input(rawDigits());
-}
-
-/* ===== BLOQUEO DURO POR PAÍS ===== */
-function enforceMaxDigitsStrict(){
-  const digits = rawDigits();
-  if(!digits) return;
-
-  const full = selectedDial + digits;
-
-  try{
-    const phone = libphonenumber.parsePhoneNumberFromString(full, selectedCountry);
-    if(phone && phone.isValid()){
-      currentMaxDigits = String(phone.nationalNumber).length;
-    }
-    if(currentMaxDigits && digits.length >= currentMaxDigits){
-      const clipped = digits.slice(0,currentMaxDigits);
-      const ayt = new libphonenumber.AsYouType(selectedCountry);
-      telInput.value = ayt.input(clipped);
-      return;
-    }
-  }catch{}
-}
-
-function validatePhone(){
-  const digits = rawDigits();
-  if(!digits){
-    phoneError.textContent="Introduce un número.";
-    return false;
-  }
-  try{
-    const phone = libphonenumber.parsePhoneNumberFromString(selectedDial+digits,selectedCountry);
-    if(phone && phone.isValid()){
-      phoneError.textContent="";
-      return true;
-    }
-  }catch{}
-  phoneError.textContent="Número inválido para este país.";
-  return false;
-}
-
-telInput.addEventListener("input",()=>{
-  formatAsYouType();
-  enforceMaxDigitsStrict();
-  validatePhone();
-});
-
-/* ===== BLOQUEO DE DÍAS PASADOS ===== */
-const fecha = document.getElementById("fecha");
-function updateMinDate(){
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  fecha.min = today.toISOString().split("T")[0];
-}
-updateMinDate();
-setInterval(updateMinDate,60000);
-
-/* ===== HORARIO 06:00–23:30 ===== */
-const hora = document.getElementById("hora");
-for(let h=6; h<24; h++){
+/* =========================
+   HORA: 06:00–23:30
+   ========================= */
+const hora=document.getElementById("hora");
+for(let h=6;h<24;h++){
   ["00","30"].forEach(m=>{
     const t=String(h).padStart(2,"0")+":"+m;
     const opt=document.createElement("option");
@@ -270,30 +292,327 @@ for(let h=6; h<24; h++){
   });
 }
 
-/* ===== ENVÍO ===== */
-document.getElementById("form").addEventListener("submit",async(e)=>{
-  e.preventDefault();
+/* =========================
+   PAÍSES: TODOS + PREFIJO + BANDERA
+   ========================= */
+const flagBox = document.getElementById("flagBox");
+const dropdown = document.getElementById("flagDropdown");
+const countriesList = document.getElementById("countriesList");
+const countrySearch = document.getElementById("countrySearch");
+const currentFlag = document.getElementById("currentFlag");
+const prefixEl = document.getElementById("prefix");
 
-  if(!validatePhone()) return;
+let selectedCountry="ES";
+let selectedDial="+34";
+let countries = []; // { iso2, name, dial, flagUrl }
+
+/* LÍMITES DUROS POR PAÍS (los más usados/variables, ajustados “como quieres”) */
+const hardMaxByCountry = {
+  ES: 9,
+  FR: 9,
+  PT: 9,
+  IT: 10,
+  GB: 10,
+  US: 10,
+  CA: 10,
+  MX: 10,
+  AR: 10,
+  BR: 11,
+  CO: 10,
+  CL: 9,
+  PE: 9,
+  DE: 11,     // Alemania suele variar; lo fijamos como pediste (10/11) -> usamos 11
+  NL: 9,
+  BE: 9,
+  CH: 9,
+  SE: 9,
+  NO: 8,
+  DK: 8,
+  FI: 9,
+  IE: 9,
+  PL: 9,
+  CZ: 9,
+  RO: 9,
+  GR: 10,
+  TR: 10,
+  UA: 9
+};
+
+function openDropdown(){
+  dropdown.style.display = "block";
+  countrySearch.value = "";
+  renderCountries("");
+  setTimeout(()=>countrySearch.focus(), 0);
+}
+function closeDropdown(){
+  dropdown.style.display = "none";
+}
+
+flagBox.addEventListener("click", (e)=>{
+  e.stopPropagation();
+  if(dropdown.style.display === "block") closeDropdown();
+  else openDropdown();
+});
+
+dropdown.addEventListener("click", (e)=> e.stopPropagation());
+countrySearch.addEventListener("click", (e)=> e.stopPropagation());
+document.addEventListener("click", ()=> closeDropdown());
+
+countrySearch.addEventListener("input", (e)=> renderCountries(e.target.value));
+
+async function loadCountries(){
+  const res = await fetch("https://restcountries.com/v3.1/all?fields=cca2,name,idd,flags");
+  if(!res.ok) throw new Error("No se pudieron cargar países");
+  const data = await res.json();
+
+  const list = [];
+  for(const c of data){
+    const iso2 = (c.cca2 || "").toUpperCase();
+    if(!iso2) continue;
+
+    const root = c.idd?.root || "";
+    const suffixes = c.idd?.suffixes || [];
+    if(!root || !root.startsWith("+")) continue;
+
+    // UI dial: root o root+primer sufijo (excepto +1)
+    let dial = root;
+    if(suffixes.length){
+      dial = (root === "+1") ? "+1" : (root + suffixes[0]);
+    }
+
+    const name = c.name?.common || iso2;
+    const flagUrl = c.flags?.png || `https://flagcdn.com/w40/${iso2.toLowerCase()}.png`;
+
+    list.push({ iso2, name, dial, flagUrl });
+  }
+
+  list.sort((a,b)=>{
+    if(a.iso2==="ES") return -1;
+    if(b.iso2==="ES") return 1;
+    return a.name.localeCompare(b.name, "es");
+  });
+
+  countries = list;
+}
+
+function renderCountries(filterText){
+  const q = (filterText || "").trim().toLowerCase();
+  countriesList.innerHTML = "";
+
+  const filtered = countries.filter(c=>{
+    if(!q) return true;
+    return c.name.toLowerCase().includes(q) || c.dial.includes(q) || c.iso2.toLowerCase().includes(q);
+  });
+
+  for(const c of filtered){
+    const row = document.createElement("div");
+    row.className = "flag-option";
+    row.innerHTML = `
+      <img src="${c.flagUrl}" alt="${c.iso2}">
+      <div class="country-name">${c.name}</div>
+      <div class="dial">${c.dial}</div>
+    `;
+    row.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      setCountry(c.iso2, c.dial, c.flagUrl);
+      closeDropdown();
+      // Al cambiar país, limpiamos input y estado
+      telInput.value = "";
+      currentMaxDigits = null;
+      phoneHint.className = "hint";
+      phoneHint.textContent = "Introduce un número válido.";
+    });
+    countriesList.appendChild(row);
+  }
+
+  if(filtered.length === 0){
+    const empty = document.createElement("div");
+    empty.style.padding = "10px 12px";
+    empty.style.color = "#6b7280";
+    empty.textContent = "No hay resultados.";
+    countriesList.appendChild(empty);
+  }
+}
+
+function setCountry(iso2, dial, flagUrl){
+  selectedCountry = iso2.toUpperCase();
+  selectedDial = dial;
+  prefixEl.textContent = dial;
+  currentFlag.src = flagUrl || `https://flagcdn.com/w40/${selectedCountry.toLowerCase()}.png`;
+  currentFlag.alt = selectedCountry;
+}
+
+async function detectCountryByIP(){
+  try{
+    const res = await fetch("https://ipapi.co/json/");
+    if(!res.ok) throw new Error("ipapi fail");
+    const j = await res.json();
+    const iso2 = (j.country_code || "").toUpperCase();
+    if(!iso2) throw new Error("no country_code");
+    const found = countries.find(c=>c.iso2 === iso2);
+    if(found) setCountry(found.iso2, found.dial, found.flagUrl);
+  }catch{
+    // fallback ES
+  }
+}
+
+/* =========================
+   TELÉFONO: FORMATEO + VALIDACIÓN + BLOQUEO DURO POR PAÍS
+   ========================= */
+const telInput=document.getElementById("telefono");
+const phoneHint=document.getElementById("phoneHint");
+
+let currentMaxDigits = null; // máximo dígitos nacionales permitidos para el país actual
+
+function rawDigits(){
+  return telInput.value.replace(/[^\d]/g,"");
+}
+
+function getMaxDigitsForCountry(){
+  // 1) hard override si existe (lo que tú quieres)
+  if(hardMaxByCountry[selectedCountry]) return hardMaxByCountry[selectedCountry];
+
+  // 2) fallback: intentamos sacar un ejemplo (típico) y usar su longitud
+  try{
+    const ex = libphonenumber.getExampleNumber(selectedCountry);
+    if(ex && ex.nationalNumber){
+      return String(ex.nationalNumber).length;
+    }
+  }catch{}
+
+  // 3) fallback de seguridad (E.164 máximo nacional suele ser <= 15)
+  return 15;
+}
+
+function applyHardLimit(){
+  const digits = rawDigits();
+  if(!digits) return;
+
+  // Si no tenemos max todavía, lo calculamos por país
+  if(!currentMaxDigits) currentMaxDigits = getMaxDigitsForCountry();
+
+  if(digits.length > currentMaxDigits){
+    const clipped = digits.slice(0, currentMaxDigits);
+    const ayt = new libphonenumber.AsYouType(selectedCountry);
+    telInput.value = ayt.input(clipped);
+  }
+}
+
+function formatPhone(){
+  const digits = rawDigits();
+  const ayt=new libphonenumber.AsYouType(selectedCountry);
+  telInput.value = ayt.input(digits);
+}
+
+function validatePhone(showError){
+  const digits = rawDigits();
+  if(!digits){
+    if(showError){
+      phoneHint.className="hint bad";
+      phoneHint.textContent="Introduce un número.";
+    }
+    return null;
+  }
+
+  try{
+    const full = selectedDial + digits;
+    const phone = libphonenumber.parsePhoneNumberFromString(full, selectedCountry);
+
+    if(!phone || !phone.isValid()){
+      if(showError){
+        phoneHint.className="hint bad";
+        phoneHint.textContent="Número no válido para el país seleccionado.";
+      } else {
+        phoneHint.className="hint";
+        phoneHint.textContent="Introduce un número válido.";
+      }
+      return null;
+    }
+
+    phoneHint.className="hint good";
+    phoneHint.textContent="Número válido.";
+    return phone;
+  }catch{
+    if(showError){
+      phoneHint.className="hint bad";
+      phoneHint.textContent="Número no válido para el país seleccionado.";
+    }
+    return null;
+  }
+}
+
+telInput.addEventListener("input", ()=>{
+  // 1) formateo
+  formatPhone();
+  // 2) bloqueo duro por país (no deja pasar del máximo)
+  applyHardLimit();
+  // 3) validación suave (sin molestar)
+  validatePhone(false);
+});
+
+telInput.addEventListener("blur", ()=>{
+  // Validación fuerte al salir
+  validatePhone(true);
+});
+
+/* =========================
+   INIT
+   ========================= */
+(async function init(){
+  await loadCountries();
+  renderCountries("");
+  await detectCountryByIP();
+
+  // Set maxDigits para país detectado
+  currentMaxDigits = getMaxDigitsForCountry();
+})();
+
+/* =========================
+   SUBMIT
+   ========================= */
+document.getElementById("form").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  status.style.display="none";
+
+  const phone = validatePhone(true);
+  if(!phone) return;
+
+  // SOLO número nacional (sin +34), en dígitos:
+  const numeroSolo = String(phone.nationalNumber); // <-- esto es lo que irá a Sheets
 
   const data={
     nombre:nombre.value.trim(),
     email:email.value.trim(),
-    telefono: rawDigits(), /* SOLO número nacional */
+    telefono:numeroSolo,
     fecha_solicitada:fecha.value+"T"+hora.value,
     mensaje:mensaje.value.trim()
   };
 
-  await fetch("https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify(data)
-  });
+  try{
+    await fetch(WEBHOOK,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify(data)
+    });
 
-  document.getElementById("successMessage").style.display="block";
-  setTimeout(()=>{document.getElementById("successMessage").style.display="none";},3000);
-  form.reset();
+    status.className="status ok";
+    status.textContent="Cita enviada correctamente.";
+    status.style.display="block";
+    form.reset();
+
+    // Reset del estado teléfono, pero mantenemos país/prefijo
+    telInput.value="";
+    currentMaxDigits = getMaxDigitsForCountry();
+    phoneHint.className="hint";
+    phoneHint.textContent="Introduce un número válido.";
+
+  }catch{
+    status.className="status err";
+    status.textContent="Error al enviar la cita.";
+    status.style.display="block";
+  }
 });
 </script>
+
 </body>
 </html>
