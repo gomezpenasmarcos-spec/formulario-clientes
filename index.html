@@ -1,153 +1,54 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reserva tu cita</title>
-
-<!-- Librería profesional teléfono -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.css"/>
-
-<style>
-body{
-  font-family:Arial, sans-serif;
-  background:#f3f3f3;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  min-height:100vh;
-  margin:0;
-}
-
-.container{
-  background:#fff;
-  padding:40px;
-  border-radius:20px;
-  width:420px;
-  box-shadow:0 10px 30px rgba(0,0,0,.10);
-}
-
-h2{
-  text-align:center;
-  font-size:32px;
-  margin-bottom:28px;
-}
-
-input, textarea, select{
-  width:100%;
-  padding:14px;
-  border-radius:12px;
-  border:1px solid #ccc;
-  font-size:18px;
-  box-sizing:border-box;
-  outline:none;
-  margin-bottom:14px;
-}
-
-textarea{ resize:none; }
-
-button{
-  width:100%;
-  padding:16px;
-  border-radius:14px;
-  border:none;
-  background:#2f5bd7;
-  color:#fff;
-  font-size:22px;
-  cursor:pointer;
-}
-button:hover{ background:#264cc0; }
-
-.iti{
-  width:100%;
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-<h2>Reserva tu cita</h2>
-
-<form id="form">
-
-<input id="nombre" type="text" placeholder="Nombre completo" required>
-<input id="email" type="email" placeholder="Correo electrónico" required>
-
-<input id="telefono" type="tel" required>
-
-<label>Selecciona el día</label>
-<input id="fecha" type="date" required>
-
-<label>Selecciona la hora</label>
-<select id="hora" required></select>
-
-<label>Motivo</label>
-<textarea id="mensaje" rows="3" placeholder="Escribe el motivo de la cita" required></textarea>
-
-<button type="submit">Reservar</button>
-
-</form>
+<label>Teléfono</label>
+<div class="phone-wrapper">
+  <input type="tel" id="telefono" required />
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/css/intlTelInput.css"/>
+
+<style>
+.phone-wrapper {
+  position: relative;
+}
+
+.iti {
+  width: 100%;
+}
+
+.iti input {
+  padding-left: 120px !important;
+}
+
+.iti__flag-container {
+  left: 0;
+}
+
+.iti__selected-flag {
+  background: transparent !important;
+  padding: 0 12px;
+  border-right: 1px solid #ddd;
+}
+
+.iti__dial-code {
+  color: #666;
+  font-weight: 400;
+}
+
+.iti__selected-flag {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/js/intlTelInput.min.js"></script>
 
 <script>
-
-// ======= TELÉFONO PROFESIONAL =========
 const phoneInput = document.querySelector("#telefono");
 
 const iti = window.intlTelInput(phoneInput, {
   initialCountry: "es",
-  separateDialCode: true,
-  preferredCountries: ["es","fr","de","gb","us"],
-  utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"
+  separateDialCode: false,
+  preferredCountries: ["es", "fr", "de", "gb", "us"],
+  utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/js/utils.js"
 });
-
-// ======= BLOQUEAR DÍAS ANTERIORES =======
-const fechaInput = document.getElementById("fecha");
-const today = new Date();
-today.setHours(0,0,0,0);
-fechaInput.min = today.toISOString().split("T")[0];
-
-// ======= HORARIO 06:00 - 23:30 =======
-const horaSelect = document.getElementById("hora");
-for(let h=6; h<24; h++){
-  ["00","30"].forEach(m=>{
-    const t = String(h).padStart(2,"0")+":"+m;
-    const opt=document.createElement("option");
-    opt.value=t;
-    opt.textContent=t;
-    horaSelect.appendChild(opt);
-  });
-}
-
-// ======= ENVÍO PRODUCCIÓN =======
-document.getElementById("form").addEventListener("submit",async(e)=>{
-  e.preventDefault();
-
-  const telefono = iti.getNumber(); // número completo internacional
-
-  const data={
-    nombre:nombre.value.trim(),
-    email:email.value.trim(),
-    telefono:telefono,
-    fecha_solicitada:fecha.value+"T"+hora.value,
-    mensaje:mensaje.value.trim()
-  };
-
-  await fetch("https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify(data)
-  });
-
-  alert("Cita enviada correctamente");
-  form.reset();
-  iti.setCountry("es");
-});
-
 </script>
-
-</body>
-</html>
