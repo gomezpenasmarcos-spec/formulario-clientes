@@ -596,7 +596,60 @@ telInput.addEventListener("blur", ()=>{
 /* =========================
    SUBMIT
    ========================= */
-document.getElementById("form").addEventListener("submit", async (e)=>{
+const form = document.getElementById("form");
+const nombreInput = document.getElementById("nombre");
+const emailInput = document.getElementById("email");
+const mensajeInput = document.getElementById("mensaje");
+const status = document.getElementById("status");
+
+form.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  status.style.display="none";
+
+  setMinDateToToday();
+  enforceDateNotPast();
+
+  const phone = validatePhone(true);
+  if(!phone) return;
+
+  // 👇 IMPORTANTE: guardamos con espacios
+  const numeroConEspacios = telInput.value.trim();
+
+  const data = {
+    nombre: nombreInput.value.trim(),
+    email: emailInput.value.trim(),
+    telefono: numeroConEspacios, // 👈 ahora se guarda con espacios
+    fecha_solicitada: fecha.value + "T" + hora.value,
+    mensaje: mensajeInput.value.trim()
+  };
+
+  try{
+    await fetch(WEBHOOK,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(data)
+    });
+
+    status.className="status ok";
+    status.textContent="Cita enviada correctamente.";
+    status.style.display="block";
+
+    form.reset();
+
+    telInput.value="";
+    currentMaxDigits = getMaxDigitsForCountry(selectedCountry);
+    phoneHint.className="hint";
+    phoneHint.textContent = hintTextForMax();
+
+    setMinDateToToday();
+
+  }catch{
+    status.className="status err";
+    status.textContent="Error al enviar la cita.";
+    status.style.display="block";
+  }
+});
+
   e.preventDefault();
   status.style.display="none";
 
