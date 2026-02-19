@@ -2,10 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Reserva tu cita</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/css/intlTelInput.css"/>
+<title>Reserva tu cita</title>
 
 <style>
 body{
@@ -17,12 +15,12 @@ body{
     height:100vh;
 }
 
-.form-container{
-    background:#fff;
+.container{
+    background:white;
     padding:40px;
     border-radius:15px;
-    width:400px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.1);
+    width:420px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.1);
 }
 
 h2{
@@ -30,53 +28,56 @@ h2{
     margin-bottom:30px;
 }
 
-input, select, textarea, button{
+input, select, textarea{
     width:100%;
     padding:12px;
     margin-bottom:15px;
     border-radius:8px;
     border:1px solid #ccc;
-    font-size:15px;
+    font-size:16px;
     box-sizing:border-box;
 }
 
 textarea{
     resize:none;
+    height:80px;
+}
+
+.phone-group{
+    display:flex;
+    gap:10px;
+}
+
+.phone-group select{
+    width:110px;
 }
 
 button{
-    background:#2d5bd1;
+    width:100%;
+    padding:14px;
+    background:#3a5fd1;
     color:white;
+    font-size:18px;
     border:none;
-    font-weight:bold;
+    border-radius:10px;
     cursor:pointer;
 }
 
 button:hover{
-    background:#244bb5;
-}
-
-label{
-    font-size:14px;
-    margin-bottom:5px;
-    display:block;
-}
-
-.telefono-wrapper{
-    margin-bottom:15px;
+    background:#2f4bb2;
 }
 
 .success{
+    margin-top:15px;
     color:green;
     text-align:center;
-    margin-top:10px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="form-container">
+<div class="container">
 <h2>Reserva tu cita</h2>
 
 <form id="formulario">
@@ -86,8 +87,15 @@ label{
 <input type="email" name="email" placeholder="Correo electrónico" required>
 
 <label>Teléfono</label>
-<div class="telefono-wrapper">
-<input id="telefono" type="tel" required>
+<div class="phone-group">
+    <select id="countryCode">
+        <option value="+34">🇪🇸 +34</option>
+        <option value="+33">🇫🇷 +33</option>
+        <option value="+49">🇩🇪 +49</option>
+        <option value="+44">🇬🇧 +44</option>
+        <option value="+1">🇺🇸 +1</option>
+    </select>
+    <input type="text" id="telefonoInput" placeholder="654 654 654" required>
 </div>
 
 <label>Selecciona el día</label>
@@ -96,87 +104,94 @@ label{
 <label>Selecciona la hora</label>
 <select id="hora" required></select>
 
-<textarea name="mensaje" placeholder="Mensaje" required></textarea>
+<label>Motivo</label>
+<textarea name="mensaje" placeholder="Escribe el motivo de la cita" required></textarea>
 
 <button type="submit">Reservar</button>
 
-<div class="success" id="mensajeExito"></div>
+<div class="success" id="successMsg"></div>
 
 </form>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/js/intlTelInput.min.js"></script>
-
 <script>
-const inputTelefono = document.querySelector("#telefono");
 
-const iti = window.intlTelInput(inputTelefono, {
-    initialCountry: "es",
-    preferredCountries: ["es","fr","it","de"],
-    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/js/utils.js"
-});
+// 🔵 TU WEBHOOK DE PRODUCCIÓN YA CONFIGURADO
+const webhookURL = "https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6";
 
-// Separación automática 3-3-3
-inputTelefono.addEventListener("input", function() {
-    let valor = inputTelefono.value.replace(/\D/g, "");
-
-    if (valor.length > 6) {
-        valor = valor.replace(/(\d{3})(\d{3})(\d{0,3})/, "$1 $2 $3");
-    } else if (valor.length > 3) {
-        valor = valor.replace(/(\d{3})(\d{0,3})/, "$1 $2");
-    }
-
-    inputTelefono.value = valor.trim();
-});
-
-// Limitar fechas pasadas
+// ===== BLOQUEAR DÍAS PASADOS =====
 const fechaInput = document.getElementById("fecha");
-const hoy = new Date();
-const yyyy = hoy.getFullYear();
-const mm = String(hoy.getMonth() + 1).padStart(2, '0');
-const dd = String(hoy.getDate()).padStart(2, '0');
-fechaInput.min = `${yyyy}-${mm}-${dd}`;
+const today = new Date().toISOString().split("T")[0];
+fechaInput.setAttribute("min", today);
 
-// Generar horas 06:00 - 00:00 cada 30 min
+// ===== GENERAR HORAS 06:00 → 00:00 CADA 30 MIN =====
 const horaSelect = document.getElementById("hora");
 
-for (let h = 6; h <= 23; h++) {
-    for (let m = 0; m < 60; m += 30) {
-        const hora = String(h).padStart(2,'0') + ":" + String(m).padStart(2,'0');
-        const option = document.createElement("option");
-        option.value = hora;
-        option.textContent = hora;
-        horaSelect.appendChild(option);
+function generarHoras(){
+    horaSelect.innerHTML = "";
+
+    for(let h=6; h<=23; h++){
+        for(let m=0; m<60; m+=30){
+            let hora = String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0");
+            let option = document.createElement("option");
+            option.value = hora;
+            option.textContent = hora;
+            horaSelect.appendChild(option);
+        }
     }
+
+    let midnight = document.createElement("option");
+    midnight.value = "00:00";
+    midnight.textContent = "00:00";
+    horaSelect.appendChild(midnight);
 }
 
-// Envío formulario
+generarHoras();
+
+// ===== FORMATEO AUTOMÁTICO TELÉFONO EN BLOQUES DE 3 =====
+const telefonoInput = document.getElementById("telefonoInput");
+
+telefonoInput.addEventListener("input", function(){
+    let digits = this.value.replace(/\D/g,"");
+    digits = digits.substring(0,9);
+    this.value = digits.replace(/(\d{3})(?=\d)/g,"$1 ");
+});
+
+// ===== ENVÍO FORMULARIO =====
 document.getElementById("formulario").addEventListener("submit", async function(e){
     e.preventDefault();
 
-    const telefonoCompleto = iti.getNumber();
+    const nombre = this.nombre.value;
+    const email = this.email.value;
+    const telefono = document.getElementById("countryCode").value + " " + telefonoInput.value.replace(/\s/g,"");
+    const fecha = fechaInput.value;
+    const hora = horaSelect.value;
+    const mensaje = this.mensaje.value;
 
-    const data = {
-        nombre: this.nombre.value,
-        email: this.email.value,
-        telefono: telefonoCompleto,
-        fecha_solicitada: this.fecha.value + "T" + horaSelect.value,
-        mensaje: this.mensaje.value
-    };
+    const fecha_solicitada = fecha + "T" + hora;
 
-    const response = await fetch("https://primary-production-4f93b.up.railway.app/webhook/cb0b99ce-d952-4988-84fd-708c61c1d9e6", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-    });
+    try{
+        const response = await fetch(webhookURL,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body: JSON.stringify({
+                nombre,
+                email,
+                telefono,
+                fecha_solicitada,
+                mensaje
+            })
+        });
 
-    if(response.ok){
-        document.getElementById("mensajeExito").textContent = "Cita reservada correctamente";
-        this.reset();
-    } else {
-        alert("Error al enviar la cita");
+        if(response.ok){
+            document.getElementById("successMsg").innerText = "Cita reservada correctamente";
+            this.reset();
+        }else{
+            alert("Error al enviar el formulario");
+        }
+
+    }catch(error){
+        alert("Error de conexión");
     }
 });
 </script>
